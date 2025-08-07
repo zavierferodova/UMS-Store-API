@@ -37,20 +37,34 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'django.contrib.admin',
-    'users',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
+    'users',
     'rest_framework',
-    'rest_framework_simplejwt'
+    'rest_framework.authtoken',
+    'rest_framework_simplejwt',
+    'dj_rest_auth',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
+
+REST_AUTH = {
+    'USE_JWT': True,
+    'JWT_AUTH_RETURN_EXPIRATION': True,
+    'JWT_AUTH_HTTPONLY':False,
+    'USER_DETAILS_SERIALIZER': 'users.serializers.CustomUserDetailsSerializer',
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+    )
 }
 
 SIMPLE_JWT = {
@@ -70,6 +84,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'ums_store.urls'
@@ -132,8 +147,8 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTH_USER_MODEL = 'users.User'
 
 AUTHENTICATION_BACKENDS = (
-    'authentication.auth.EmailUsernameBackend',
-    'django.contrib.auth.backends.ModelBackend'
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend'
 )
 
 LANGUAGE_CODE = 'en-us'
@@ -154,3 +169,28 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': os.environ.get('GOOGLE_CLIENT_ID'),
+            'secret': os.environ.get('GOOGLE_CLIENT_SECRET'),
+            'key': ''
+        },
+        'SCOPE': [
+            'email',
+            'profile'
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'OAUTH_PKCE_ENABLED': True,
+    }
+}
+
+SOCIALACCOUNT_ADAPTER = 'authentication.adapter.CustomSocialAccountAdapter'
+
+SITE_ID = 1
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+ACCOUNT_LOGIN_METHODS = {'email', 'username'}
+ACCOUNT_EMAIL_VERIFICATION = 'optional'

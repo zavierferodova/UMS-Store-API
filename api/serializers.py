@@ -8,5 +8,5 @@ class HttpResponseBodySerializer(serializers.Serializer):
     success = serializers.BooleanField()
     message = serializers.CharField()
     data = serializers.JSONField()
-    errors = HttpErrorBodySerializer(many=True, required=False)
+    error = HttpErrorBodySerializer(many=True, required=False)
     meta = serializers.JSONField(required=False)

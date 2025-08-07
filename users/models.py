@@ -3,19 +3,21 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, password, **extra_fields):
+    def create_user(self, email, password=None, **extra_fields):
         if not email:
-            raise ValueError('The Email must be set')
+            raise ValueError('The Email field is required')
         email = self.normalize_email(email)
+
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
-        user.save()
+        user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password, **extra_fields):
-        extra_fields.setdefault('is_superuser', True)
+    def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
         return self.create_user(email, password, **extra_fields)
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     GENDER_CHOICES = [
@@ -34,7 +36,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    USERNAME_FIELD = 'username'
+    USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
 
     def __str__(self):

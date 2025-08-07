@@ -8,6 +8,7 @@ class CustomPagination(PageNumberPagination):
 
     def get_paginated_response(self, data, message="Data retrieved successfully"):
         return api_response(
+            status=200,
             success=True,
             message=message,
             data=data,

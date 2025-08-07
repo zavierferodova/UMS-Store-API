@@ -2,11 +2,13 @@ from rest_framework.response import Response
 from .serializers import HttpResponseBodySerializer
 
 def api_response(
+    status: int,
     success: bool,
     message: str,
     data: dict | list | None = None,
-    errors: list | None = None,
-    meta: dict | None = None):
+    error: list | None = None,
+    meta: dict | None = None
+):
 
     response = {
         'success': success,
@@ -14,11 +16,11 @@ def api_response(
         'data': data
     }
 
-    if errors:
-        response['errors'] = errors
+    if error:
+        response['error'] = error
 
     if meta:
         response['meta'] = meta
 
     serialzer =  HttpResponseBodySerializer(response)
-    return Response(serialzer.data)
+    return Response(serialzer.data, status=status)

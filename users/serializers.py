@@ -12,3 +12,6 @@ class UserSerializer(serializers.ModelSerializer):
         if obj.groups.exists():
             return obj.groups.first().name
         return None
+
+class CustomUserDetailsSerializer(UserSerializer):
+    pass

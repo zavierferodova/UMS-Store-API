@@ -1,4 +1,5 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from .models import User
 from .serializers import UserSerializer
 from api.utils import api_response
@@ -7,6 +8,7 @@ from django.db.models import Q
 from rest_framework.generics import ListAPIView
 
 class UserListView(ListAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = CustomPagination
@@ -31,6 +33,7 @@ class UserListView(ListAPIView):
         
         serializer = self.get_serializer(queryset, many=True)
         return api_response(
+            status=200,
             success=True,
             message='Users retrieved successfully.',
             data=serializer.data
@@ -39,6 +42,7 @@ class UserListView(ListAPIView):
 user_list = UserListView.as_view()
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def user_detail(request, pk):
     """
     Retrieve a single user by ID or username.
@@ -50,13 +54,15 @@ def user_detail(request, pk):
             user = User.objects.get(Q(email__iexact=pk) | Q(username__iexact=pk))
         serializer = UserSerializer(user)
         return api_response(
+            status=200,
             success=True,
             message='User retrieved successfully.',
             data=serializer.data
         )
     except User.DoesNotExist:
         return api_response(
+            status=404,
             success=False,
             message=f'User with id or username {pk} not found.',
-            errors=[{'message': f'User with id or username {pk} not found.'}]
+            error=[{'message': f'User with id or username {pk} not found.'}]
         )
