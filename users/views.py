@@ -1,5 +1,7 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+
+from authentication.permissions import IsAdminGroup, IsProcurementGroup
 from .models import User
 from .serializers import UserSerializer
 from api.utils import api_response
@@ -8,7 +10,7 @@ from django.db.models import Q
 from rest_framework.generics import ListAPIView
 
 class UserListView(ListAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminGroup, IsProcurementGroup]
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = CustomPagination
@@ -42,7 +44,7 @@ class UserListView(ListAPIView):
 user_list = UserListView.as_view()
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminGroup | IsProcurementGroup])
 def user_detail(request, pk):
     """
     Retrieve a single user by ID or username.
