@@ -14,6 +14,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 from datetime import timedelta
+from google.oauth2 import service_account
 
 load_dotenv()
 
@@ -52,7 +53,24 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'storages',
+    'django_cleanup.apps.CleanupConfig'
 ]
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+        "OPTIONS": {
+          "bucket_name": "store-ums-storage",
+          "credentials": service_account.Credentials.from_service_account_file(
+            os.path.join(BASE_DIR, 'gcs-key.json')
+          ),
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 REST_AUTH = {
     'USE_JWT': True,

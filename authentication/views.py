@@ -1,13 +1,15 @@
-from dj_rest_auth.registration.serializers import SocialLoginSerializer
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from dj_rest_auth.registration.views import SocialLoginView
-from .serializers import CustomSocialLoginSerializer
+from .serializers import CustomSocialLoginSerializer, UserProfileImageSerializer
 from dj_rest_auth.views import LoginView, PasswordChangeView, UserDetailsView
 from api.utils import api_response
 from rest_framework import status
-from dj_rest_auth.jwt_auth import get_refresh_view
 from rest_framework_simplejwt.views import TokenRefreshView
 from .serializers import CustomTokenRefreshSerializer
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
+from users.serializers import UserSerializer
 
 class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
@@ -87,4 +89,28 @@ class CustomUserDetailsView(UserDetailsView):
             success=True,
             message="User details updated successfully",
             data=response.data
+        )
+
+class UserProfileImageView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def patch(self, request, *args, **kwargs):
+        serializer = UserProfileImageSerializer(data=request.data)
+        if serializer.is_valid():
+            user = request.user
+            user.profile_image = request.data['profile_image']
+            user.save()
+            serializer = UserSerializer(user)
+            return api_response(
+                status=status.HTTP_200_OK,
+                success=True,
+                message="Profile image updated successfully",
+                data=serializer.data
+            )
+        return api_response(
+            status=status.HTTP_400_BAD_REQUEST,
+            success=False,
+            message="Invalid data",
+            data=serializer.errors
         )

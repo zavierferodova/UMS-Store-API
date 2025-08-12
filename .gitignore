@@ -1,3 +1,11 @@
+# Python cache
 __pycache__/
+
+# Environment variables
 .env
+
+# Google Cloud Storage
+gcs-key.json
+
+# Misc
 .DS_Store

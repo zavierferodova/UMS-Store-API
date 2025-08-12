@@ -1,5 +1,9 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from django.utils.translation import gettext_lazy as _
+from django.core.validators import FileExtensionValidator
+import uuid
+import os
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -18,10 +22,26 @@ class UserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 class User(AbstractBaseUser, PermissionsMixin):
+    def generate_unique_filename(instance, filename):
+        """
+        Generates a unique filename for uploaded files using UUID.
+        """
+        ext = filename.split('.')[-1]
+        filename = f"{uuid.uuid4()}.{ext}"
+        return os.path.join('profile_images/', filename)
+
     GENDER_CHOICES = [
         ('male', 'Male'),
         ('female', 'Female'),
     ]
+
+    profile_image = models.ImageField(
+        _("profile image"),
+        upload_to=generate_unique_filename,
+        blank=True,
+        null=True,
+        validators=[FileExtensionValidator(allowed_extensions=["jpg", "jpeg", "png"])],
+    )
 
     email = models.EmailField(max_length=255, unique=True)
     username = models.CharField(max_length=30, unique=True, blank=True, null=True)

@@ -10,3 +10,6 @@ class HttpResponseBodySerializer(serializers.Serializer):
     data = serializers.JSONField()
     error = HttpErrorBodySerializer(many=True, required=False)
     meta = serializers.JSONField(required=False)
+
+class ErrorResponseSerializer(serializers.Serializer):
+    message = serializers.CharField()

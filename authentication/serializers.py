@@ -3,9 +3,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from datetime import datetime, timezone
-
-class ErrorResponseSerializer(serializers.Serializer):
-    message = serializers.CharField()
+from users.models import User
 
 class CustomSocialLoginSerializer(SocialLoginSerializer):
     def validate(self, attrs):
@@ -27,3 +25,13 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
             dt_object = datetime.fromtimestamp(access_token_expiration_timestamp, tz=timezone.utc)
             data['access_expiration'] = dt_object.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         return data
+
+class UserProfileImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['profile_image']
+
+    def update(self, instance, validated_data):
+        instance.profile_image = validated_data.get('profile_image', instance.profile_image)
+        instance.save()
+        return instance
