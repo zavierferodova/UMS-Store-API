@@ -1,6 +1,19 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.forms import UserChangeForm as DefaultUserChangeForm
+from django.contrib.auth.forms import UserCreationForm as DefaultUserCreationForm
 from .models import User
+
+class UserChangeForm(DefaultUserChangeForm):
+    class Meta:
+        model = User
+        fields = "__all__"
+
+
+class UserCreationForm(DefaultUserCreationForm):
+    class Meta:
+        model = User
+        fields = ["email"]
 
 class UserAdmin(BaseUserAdmin):
     fieldsets = (
@@ -11,9 +24,13 @@ class UserAdmin(BaseUserAdmin):
     )
     add_fieldsets = (
         (None, {
-            'fields': ('email', 'password', 'password2', 'name', 'username', 'gender', 'phone', 'address'),
+            'fields': ('email', 'password1', 'password2', 'name'),
         }),
     )
+
+    form = UserChangeForm
+    add_form = UserCreationForm
+
     list_display = ('name', 'email', 'username', 'is_active', 'is_staff', 'is_superuser', 'last_login')
     search_fields = ('username', 'name', 'email')
     ordering = ('name',)
