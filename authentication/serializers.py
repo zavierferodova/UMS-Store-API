@@ -6,14 +6,22 @@ from datetime import datetime, timezone
 from users.models import User
 
 class CustomSocialLoginSerializer(SocialLoginSerializer):
+    def get_cleaned_data(self):
+        data = super().get_cleaned_data()
+        # Ensure username is None instead of empty string
+        if 'username' in data and data['username'] == '':
+            data['username'] = None
+        return data
+        
     def validate(self, attrs):
         attrs = super().validate(attrs)
         user = attrs['user']
-
+            
+        # Set name from Google if not already set
         if not user.name:
             user.name = user.socialaccount_set.filter(provider='google').first().extra_data.get('name')
-            user.save()
-
+            
+        user.save()  # Single save call after all modifications
         return attrs
 
 class CustomTokenRefreshSerializer(TokenRefreshSerializer):

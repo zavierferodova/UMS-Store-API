@@ -19,12 +19,22 @@ class UserListView(ListAPIView):
     def get_queryset(self):
         queryset = super().get_queryset()
         search = self.request.query_params.get('search')
+        roles = self.request.query_params.get('role')
+        
         if search:
             queryset = queryset.filter(
                 Q(email__icontains=search) |
                 Q(username__icontains=search) |
                 Q(name__icontains=search)
             )
+        
+        try:
+            if roles:
+                role_list = [role.strip().lower() for role in roles.split(',')]
+                queryset = queryset.filter(groups__name__in=role_list).distinct()
+        except:
+            pass
+            
         return queryset
 
     def list(self, request, *args, **kwargs):
@@ -42,8 +52,6 @@ class UserListView(ListAPIView):
             data=serializer.data
         )
 
-user_list = UserListView.as_view()
-
 class UserDetailView(RetrieveUpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -51,7 +59,7 @@ class UserDetailView(RetrieveUpdateAPIView):
 
     def get_permissions(self):
         if self.request.method == 'GET':
-            return [IsAuthenticated(), OR(IsAdminGroup(), IsProcurementGroup())]
+            return [IsAuthenticated(), IsAdminGroup()]
         elif self.request.method == 'PATCH':
             return [IsAuthenticated(), IsAdminGroup()]
         return [IsAuthenticated()]
@@ -138,4 +146,5 @@ class UserDetailView(RetrieveUpdateAPIView):
             data=serializer.data
         )
 
+user_list = UserListView.as_view()
 user_detail = UserDetailView.as_view()

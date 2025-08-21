@@ -57,5 +57,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
 
+    def save(self, *args, **kwargs):
+        # Convert empty username to None before saving
+        if self.username == '':
+            self.username = None
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.email

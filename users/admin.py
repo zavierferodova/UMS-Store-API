@@ -9,7 +9,6 @@ class UserChangeForm(DefaultUserChangeForm):
         model = User
         fields = "__all__"
 
-
 class UserCreationForm(DefaultUserCreationForm):
     class Meta:
         model = User
