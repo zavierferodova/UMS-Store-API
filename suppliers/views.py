@@ -1,4 +1,4 @@
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, OR
 from authentication.permissions import IsAdminGroup, IsProcurementGroup
 from .models import Supplier
 from .serializers import SupplierSerializer
@@ -88,11 +88,11 @@ class SupplierDetailView(RetrieveUpdateDestroyAPIView):
 
     def get_permissions(self):
         if self.request.method == 'GET':
-            return [IsAuthenticated(), IsAdminGroup() or IsProcurementGroup()]
+            return [IsAuthenticated(), OR(IsAdminGroup(), IsProcurementGroup())]
         elif self.request.method == 'PATCH':
-            return [IsAuthenticated(), IsAdminGroup() or IsProcurementGroup()]
+            return [IsAuthenticated(), OR(IsAdminGroup(), IsProcurementGroup())]
         elif self.request.method == 'DELETE':
-            return [IsAuthenticated(), IsAdminGroup() or IsProcurementGroup()]
+            return [IsAuthenticated(), OR(IsAdminGroup(), IsProcurementGroup())]
         return [IsAuthenticated()]
 
     def retrieve(self, request, *args, **kwargs):

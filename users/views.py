@@ -59,7 +59,7 @@ class UserDetailView(RetrieveUpdateAPIView):
 
     def get_permissions(self):
         if self.request.method == 'GET':
-            return [IsAuthenticated(), IsAdminGroup()]
+            return [IsAuthenticated(), OR(IsAdminGroup(), IsProcurementGroup())]
         elif self.request.method == 'PATCH':
             return [IsAuthenticated(), IsAdminGroup()]
         return [IsAuthenticated()]
@@ -67,10 +67,7 @@ class UserDetailView(RetrieveUpdateAPIView):
     def get_object(self):
         pk = self.kwargs.get('pk')
         try:
-            if pk.isdigit():
-                obj = User.objects.get(pk=pk)
-            else:
-                obj = User.objects.get(Q(email__iexact=pk) | Q(username__iexact=pk))
+            obj = User.objects.get(Q(id__iexact=pk) | Q(username__iexact=pk))
             self.check_object_permissions(self.request, obj)
             return obj
         except User.DoesNotExist:

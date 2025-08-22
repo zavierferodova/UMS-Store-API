@@ -21,20 +21,22 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(email, password, **extra_fields)
 
-class User(AbstractBaseUser, PermissionsMixin):
-    def generate_unique_filename(instance, filename):
-        """
-        Generates a unique filename for uploaded files using UUID.
-        """
-        ext = filename.split('.')[-1]
-        filename = f"{uuid.uuid4()}.{ext}"
-        return os.path.join('profile_images/', filename)
+def generate_unique_filename(instance, filename):
+    """
+    Generates a unique filename for uploaded files using UUID.
+    """
+    ext = filename.split('.')[-1]
+    filename = f"{uuid.uuid4()}.{ext}"
+    return os.path.join('profile_images/', filename)
 
+
+class User(AbstractBaseUser, PermissionsMixin):
     GENDER_CHOICES = [
         ('male', 'Male'),
         ('female', 'Female'),
     ]
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     profile_image = models.ImageField(
         _("profile image"),
         upload_to=generate_unique_filename,
