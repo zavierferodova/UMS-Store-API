@@ -1,9 +1,0 @@
-Django
-djangorestframework
-psycopg2-binary
-djangorestframework-simplejwt
-django_extensions
-django-storages
-google-cloud-storage
-Pillow
-django-cleanup

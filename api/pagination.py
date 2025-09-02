@@ -6,7 +6,7 @@ class CustomPagination(PageNumberPagination):
     page_size_query_param = 'limit'
     max_page_size = 100
 
-    def get_paginated_response(self, data, message="Data retrieved successfully"):
+    def get_paginated_response(self, data, message: str = "Data retrieved successfully"):
         return api_response(
             status=200,
             success=True,

@@ -9,3 +9,6 @@ gcs-key.json
 
 # Misc
 .DS_Store
+
+# AI Agent Directory
+/.agent/

@@ -21,14 +21,13 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(email, password, **extra_fields)
 
-def generate_unique_filename(instance, filename):
+def handle_upload_image(instance, filename):
     """
     Generates a unique filename for uploaded files using UUID.
     """
     ext = filename.split('.')[-1]
     filename = f"{uuid.uuid4()}.{ext}"
     return os.path.join('profile_images/', filename)
-
 
 class User(AbstractBaseUser, PermissionsMixin):
     GENDER_CHOICES = [
@@ -39,7 +38,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     profile_image = models.ImageField(
         _("profile image"),
-        upload_to=generate_unique_filename,
+        upload_to=handle_upload_image,
         blank=True,
         null=True,
         validators=[FileExtensionValidator(allowed_extensions=["jpg", "jpeg", "png"])],
@@ -53,6 +52,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     address = models.CharField(max_length=255, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     objects = UserManager()
 

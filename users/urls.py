@@ -1,7 +1,7 @@
-from django.urls import re_path, path
-from . import views
+from django.urls import path
+from .views import UserViewSet
 
 urlpatterns = [
-    re_path(r'list/?', views.user_list),
-    path('<str:pk>', views.UserDetailView.as_view()),
+    path('', UserViewSet.as_view({'get': 'list'}), name='user-list'),
+    path('/<pk>', UserViewSet.as_view({'get': 'retrieve', 'patch': 'partial_update'}), name='user-detail'),
 ]

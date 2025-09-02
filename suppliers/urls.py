@@ -1,8 +1,7 @@
-from django.urls import re_path, path
+from django.urls import path
 from . import views
 
 urlpatterns = [
-    re_path(r'list/?', views.supplier_list),
-    re_path(r'add/?', views.add_supplier),
-    path('<str:pk>', views.supplier_detail, name='supplier_detail')
+    path('', views.SupplierViewSet.as_view({'get': 'list', 'post': 'create'}), name='supplier-list'),
+    path('/<pk>', views.SupplierViewSet.as_view({'get': 'retrieve', 'patch': 'partial_update', 'delete': 'destroy'}), name='supplier-detail'),
 ]
