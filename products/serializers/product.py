@@ -28,6 +28,19 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'price', 'additional_info', 'category', 'images', 'created_at', 'updated_at', 'skus']
         read_only_fields = ['created_at', 'updated_at']
 
+    def validate_additional_info(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError("This field must be a list of objects.")
+
+        for item in value:
+            if not isinstance(item, dict):
+                raise serializers.ValidationError("Each item in the list must be an object.")
+            if 'label' not in item or 'value' not in item:
+                raise serializers.ValidationError("Each object must have 'label' and 'value' keys.")
+            if not isinstance(item['label'], str) or not isinstance(item['value'], str):
+                raise serializers.ValidationError("The 'label' and 'value' must be strings.")
+        return value
+
     def create(self, validated_data):
         skus_data = validated_data.pop('skus', [])
         product = super().create(validated_data)
