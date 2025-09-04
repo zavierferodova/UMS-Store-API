@@ -31,9 +31,11 @@ class SupplierViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         """
         Custom filter for `status` (active, deleted) + search handled by DRF SearchFilter.
+        Default ordering by name (A-Z).
         """
         queryset = Supplier.objects.all()
         status_param = self.request.query_params.get('status', '').lower()
+        ordering = self.request.query_params.get('ordering', 'name')  # Default ordering by name
 
         if status_param:
             status_list = [s.strip() for s in status_param.split(',')]
@@ -46,6 +48,12 @@ class SupplierViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                 queryset = queryset.filter(status_filter)
         else:
             queryset = queryset.filter(is_deleted=False)
+
+        # Apply ordering
+        if ordering.startswith('-'):
+            queryset = queryset.order_by(ordering[1:]).reverse()  # Descending order
+        else:
+            queryset = queryset.order_by(ordering)  # Ascending order
 
         return queryset
 

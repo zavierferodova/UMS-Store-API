@@ -13,7 +13,7 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
     filter_backends = [SearchFilter]
-    search_fields = ['name', 'description']
+    search_fields = ['name', 'description', 'skus__sku']
 
     def get_permissions(self):
         """
@@ -24,6 +24,22 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         else:
             permission_classes = [permissions.AllowAny]
         return [permission() for permission in permission_classes]
+        
+    def get_queryset(self):
+        """
+        Returns the queryset with optional ordering.
+        Default ordering is by name (A-Z).
+        """
+        queryset = super().get_queryset()
+        ordering = self.request.query_params.get('ordering', 'name')  # Default ordering by name
+        
+        # Apply ordering
+        if ordering.startswith('-'):
+            queryset = queryset.order_by(ordering[1:]).reverse()  # Descending order
+        else:
+            queryset = queryset.order_by(ordering)  # Ascending order
+            
+        return queryset
 
     def list(self, request, *args, **kwargs):
         try:

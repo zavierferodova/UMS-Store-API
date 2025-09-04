@@ -37,6 +37,7 @@ class UserViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         queryset = super().get_queryset()
         search = self.request.query_params.get('search')
         roles = self.request.query_params.get('role')
+        ordering = self.request.query_params.get('ordering', 'name')  # Default ordering by name
 
         if search:
             queryset = queryset.filter(
@@ -51,6 +52,12 @@ class UserViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                 queryset = queryset.filter(groups__name__in=role_list).distinct()
             except Exception:
                 pass
+
+        # Apply ordering
+        if ordering.startswith('-'):
+            queryset = queryset.order_by(ordering[1:]).reverse()  # Descending order
+        else:
+            queryset = queryset.order_by(ordering)  # Ascending order
 
         return queryset
 
