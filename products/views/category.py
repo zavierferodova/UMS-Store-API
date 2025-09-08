@@ -10,7 +10,7 @@ from rest_framework.filters import SearchFilter
 from authentication.permissions import IsAdminGroup, IsProcurementGroup
 
 class CategoryViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
-    queryset = ProductCategory.objects.all()
+    queryset = ProductCategory.objects.all().order_by('name')
     serializer_class = ProductCategorySerializer
     pagination_class = CustomPagination
     filter_backends = [SearchFilter]

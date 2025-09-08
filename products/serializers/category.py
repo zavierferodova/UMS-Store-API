@@ -7,10 +7,10 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'created_at', 'updated_at']
 
     def create(self, validated_data):
-        validated_data['name'] = validated_data['name'].lower()
+        validated_data['name'] = validated_data['name']
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         if 'name' in validated_data:
-            validated_data['name'] = validated_data['name'].lower()
+            validated_data['name'] = validated_data['name']
         return super().update(instance, validated_data)
