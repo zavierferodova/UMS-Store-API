@@ -1,4 +1,4 @@
-from rest_framework import status, viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from api.mixins import CustomPaginationMixin
 from api.utils import api_response
@@ -25,6 +25,25 @@ class CategoryViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         else:
             permission_classes = [permissions.AllowAny]
         return [permission() for permission in permission_classes]
+
+    def update(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=kwargs.pop('partial', False))
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            return api_response(
+                status=status.HTTP_200_OK,
+                success=True,
+                message="Category updated successfully",
+                data=serializer.data
+            )
+        except Exception as e:
+            return api_response(
+                status=status.HTTP_400_BAD_REQUEST,
+                success=False,
+                message=str(e)
+            )
 
     def list(self, request, *args, **kwargs):
         try:

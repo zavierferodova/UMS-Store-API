@@ -5,7 +5,7 @@ from products.serializers.category import ProductCategorySerializer
 from products.serializers.image import ProductImageNestedOutputSerializer
 from products.models.sku import ProductSKU
 from django.core.validators import RegexValidator
-from products.serializers.sku import ProductSKUNestedSerializer
+from products.serializers.sku import ProductSKUSerializer
 
 class ProductSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(
@@ -29,6 +29,9 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'updated_at']
 
     def validate_additional_info(self, value):
+        if value is None:
+            return value
+            
         if not isinstance(value, list):
             raise serializers.ValidationError("This field must be a list of objects.")
 
@@ -69,6 +72,5 @@ class ProductSerializer(serializers.ModelSerializer):
         if instance.category:
             representation['category'] = ProductCategorySerializer(instance.category).data
         
-        # Return all SKUs associated with the product
-        representation['skus'] = ProductSKUNestedSerializer(instance.skus.all(), many=True).data
+        representation['skus'] = ProductSKUSerializer(instance.skus.all().order_by('created_at'), many=True).data
         return representation
