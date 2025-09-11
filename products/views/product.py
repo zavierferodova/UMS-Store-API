@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import status, viewsets, permissions
 from rest_framework.response import Response
 from api.mixins import CustomPaginationMixin
@@ -7,6 +8,7 @@ from products.models.product import Product
 from api.pagination import CustomPagination
 from rest_framework.filters import SearchFilter
 from authentication.permissions import IsAdminGroup, IsProcurementGroup
+from uuid import UUID
 
 class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
     queryset = Product.objects.all()
@@ -27,13 +29,48 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         
     def get_queryset(self):
         """
-        Returns the queryset with optional ordering.
-        Default ordering is by name (A-Z).
+        Returns the queryset with optional ordering and filtering.
+        Default ordering by name (A-Z).
+        
+        Query Parameters:
+        - status: Filter by status (active,deleted) - only applies to list requests
+        - categories: Comma-separated list of category IDs to filter by
         """
         queryset = super().get_queryset()
-        ordering = self.request.query_params.get('ordering', 'name')  # Default ordering by name
         
+        # Apply category filter if categories parameter is provided
+        categories_param = self.request.query_params.get('categories')
+        if categories_param:
+            try:
+                category_uuids = []
+                for cid in categories_param.split(','):
+                    try:
+                        category_uuids.append(UUID(cid.strip()))
+                    except (ValueError, AttributeError):
+                        continue
+                if category_uuids:
+                    queryset = queryset.filter(category_id__in=category_uuids)
+            except (ValueError, AttributeError):
+                pass  # Ignore invalid UUIDs
+        
+        # Only apply status filtering for list requests
+        if self.action == 'list':
+            status_param = self.request.query_params.get('status', '').lower()
+            if status_param:
+                status_list = [s.strip() for s in status_param.split(',')]
+                status_filter = Q()
+                if 'active' in status_list:
+                    status_filter |= Q(is_deleted=False)
+                if 'deleted' in status_list:
+                    status_filter |= Q(is_deleted=True)
+                if status_filter:
+                    queryset = queryset.filter(status_filter)
+            else:
+                # Default to showing only active products for list view
+                queryset = queryset.filter(is_deleted=False)
+            
         # Apply ordering
+        ordering = self.request.query_params.get('ordering', 'name')  # Default ordering by name
         if ordering.startswith('-'):
             queryset = queryset.order_by(ordering[1:]).reverse()  # Descending order
         else:
@@ -151,7 +188,8 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
-            self.perform_destroy(instance)
+            instance.is_deleted = True
+            instance.save(update_fields=['is_deleted'])
             response_obj = api_response(
                 status=status.HTTP_200_OK,
                 success=True,

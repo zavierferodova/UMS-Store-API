@@ -32,22 +32,26 @@ class SupplierViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         """
         Custom filter for `status` (active, deleted) + search handled by DRF SearchFilter.
         Default ordering by name (A-Z).
+        Status filtering only applies to list requests.
         """
         queryset = Supplier.objects.all()
-        status_param = self.request.query_params.get('status', '').lower()
         ordering = self.request.query_params.get('ordering', 'name')  # Default ordering by name
 
-        if status_param:
-            status_list = [s.strip() for s in status_param.split(',')]
-            status_filter = Q()
-            if 'active' in status_list:
-                status_filter |= Q(is_deleted=False)
-            if 'deleted' in status_list:
-                status_filter |= Q(is_deleted=True)
-            if status_filter:
-                queryset = queryset.filter(status_filter)
-        else:
-            queryset = queryset.filter(is_deleted=False)
+        # Only apply status filtering for list requests
+        if self.action == 'list':
+            status_param = self.request.query_params.get('status', '').lower()
+            if status_param:
+                status_list = [s.strip() for s in status_param.split(',')]
+                status_filter = Q()
+                if 'active' in status_list:
+                    status_filter |= Q(is_deleted=False)
+                if 'deleted' in status_list:
+                    status_filter |= Q(is_deleted=True)
+                if status_filter:
+                    queryset = queryset.filter(status_filter)
+            else:
+                # Default to showing only active suppliers for list view
+                queryset = queryset.filter(is_deleted=False)
 
         # Apply ordering
         if ordering.startswith('-'):

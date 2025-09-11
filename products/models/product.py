@@ -8,6 +8,7 @@ class Product(BaseModel):
     price = models.BigIntegerField()
     additional_info = models.JSONField(null=True, blank=True)
     category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, null=True, blank=True)
+    is_deleted = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'product'

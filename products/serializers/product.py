@@ -25,7 +25,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'additional_info', 'category', 'images', 'created_at', 'updated_at', 'skus']
+        fields = ['id', 'images', 'name', 'description', 'price', 'category', 'skus', 'additional_info', 'is_deleted', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
 
     def validate_additional_info(self, value):
