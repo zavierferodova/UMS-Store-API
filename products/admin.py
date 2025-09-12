@@ -24,7 +24,7 @@ class ProductCategoryAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Base Information', {
-            'fields': ('id', 'name', 'description', 'price', 'additional_info', 'category')
+            'fields': ('id', 'name', 'description', 'price', 'category', 'additional_info', 'is_deleted')
         }),
         ('Additional Information', {
             'fields': ('created_at', 'updated_at'),

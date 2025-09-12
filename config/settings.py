@@ -109,7 +109,7 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
 ]
 
-ROOT_URLCONF = 'ums_store.urls'
+ROOT_URLCONF = 'config.urls'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -129,7 +129,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'ums_store.wsgi.application'
+WSGI_APPLICATION = 'config.wsgi.application'
 
 
 # Database
