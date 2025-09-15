@@ -42,6 +42,7 @@ class ProductSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Each object must have 'label' and 'value' keys.")
             if not isinstance(item['label'], str) or not isinstance(item['value'], str):
                 raise serializers.ValidationError("The 'label' and 'value' must be strings.")
+
         return value
 
     def create(self, validated_data):

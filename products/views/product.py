@@ -79,28 +79,20 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         return queryset
 
     def list(self, request, *args, **kwargs):
-        try:
-            queryset = self.filter_queryset(self.get_queryset())
-            page = self.paginate_queryset(queryset)
-            if page is not None:
-                serializer = self.get_serializer(page, many=True)
-                return self.get_paginated_response(serializer.data, message="Products retrieved successfully")
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data, message="Products retrieved successfully")
 
-            serializer = self.get_serializer(queryset, many=True)
-            response_obj = api_response(
-                status=status.HTTP_200_OK,
-                success=True,
-                message="Products retrieved successfully",
-                data=serializer.data
-            )
-            return Response(response_obj.data, status=response_obj.status_code)
-        except Exception as e:
-            response_obj = api_response(
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                success=False,
-                message=str(e)
-            )
-            return Response(response_obj.data, status=response_obj.status_code)
+        serializer = self.get_serializer(queryset, many=True)
+        response_obj = api_response(
+            status=status.HTTP_200_OK,
+            success=True,
+            message="Products retrieved successfully",
+            data=serializer.data
+        )
+        return Response(response_obj.data, status=response_obj.status_code)
 
     def retrieve(self, request, *args, **kwargs):
         try:
@@ -120,70 +112,47 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                 message="Product not found"
             )
             return Response(response_obj.data, status=response_obj.status_code)
-        except Exception as e:
-            response_obj = api_response(
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                success=False,
-                message=str(e)
-            )
-            return Response(response_obj.data, status=response_obj.status_code)
 
     def create(self, request, *args, **kwargs):
-        try:
-            serializer = self.get_serializer(data=request.data)
-            if serializer.is_valid():
-                self.perform_create(serializer)
-                headers = self.get_success_headers(serializer.data)
-                response_obj = api_response(
-                    status=status.HTTP_201_CREATED,
-                    success=True,
-                    message="Product created successfully",
-                    data=serializer.data
-                )
-                return Response(response_obj.data, status=response_obj.status_code, headers=headers)
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
             response_obj = api_response(
-                status=status.HTTP_400_BAD_REQUEST,
-                success=False,
-                message="Invalid data",
-                error=serializer.errors
+                status=status.HTTP_201_CREATED,
+                success=True,
+                message="Product created successfully",
+                data=serializer.data
             )
-            return Response(response_obj.data, status=response_obj.status_code)
-        except Exception as e:
-            response_obj = api_response(
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                success=False,
-                message=str(e)
-            )
-            return Response(response_obj.data, status=response_obj.status_code)
+            return Response(response_obj.data, status=response_obj.status_code, headers=headers)
+        response_obj = api_response(
+            status=status.HTTP_400_BAD_REQUEST,
+            success=False,
+            message="Invalid data",
+            error=serializer.errors
+        )
+        return Response(response_obj.data, status=response_obj.status_code)
 
     def partial_update(self, request, *args, **kwargs):
-        try:
-            partial = kwargs.pop('partial', True)
-            instance = self.get_object()
-            serializer = self.get_serializer(instance, data=request.data, partial=partial)
-            if serializer.is_valid():
-                self.perform_update(serializer)
-                response_obj = api_response(
-                    status=status.HTTP_200_OK,
-                    success=True,
-                    message="Product updated successfully",
-                    data=serializer.data
-                )
-                return Response(response_obj.data, status=response_obj.status_code)
+        partial = kwargs.pop('partial', True)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        if serializer.is_valid():
+            self.perform_update(serializer)
             response_obj = api_response(
-                status=status.HTTP_400_BAD_REQUEST,
-                success=False,
-                message="Invalid data",
-                error=serializer.errors
+                status=status.HTTP_200_OK,
+                success=True,
+                message="Product updated successfully",
+                data=serializer.data
             )
             return Response(response_obj.data, status=response_obj.status_code)
-        except Exception as e:
-            response_obj = api_response(
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                success=False,
-                message=str(e)
-            )
-            return Response(response_obj.data, status=response_obj.status_code)
+        response_obj = api_response(
+            status=status.HTTP_400_BAD_REQUEST,
+            success=False,
+            message="Invalid data",
+            error=serializer.errors
+        )
+        return Response(response_obj.data, status=response_obj.status_code)
 
     def destroy(self, request, *args, **kwargs):
         try:

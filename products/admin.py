@@ -4,7 +4,6 @@ from products.models.product import Product
 from products.models.image import ProductImage
 from products.models.sku import ProductSKU
 
-
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
