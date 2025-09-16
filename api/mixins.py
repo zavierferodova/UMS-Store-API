@@ -1,4 +1,3 @@
-from rest_framework.response import Response
 
 class CustomPaginationMixin:
     def get_paginated_response(self, data, message: str):

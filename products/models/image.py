@@ -1,9 +1,12 @@
-from products.models.base import BaseModel
-from django.db import models
-from products.models.product import Product
-from django.core.validators import FileExtensionValidator
-import uuid
 import os
+import uuid
+
+from django.core.validators import FileExtensionValidator
+from django.db import models
+
+from products.models.base import BaseModel
+from products.models.product import Product
+
 
 def handle_upload_image(instance, filename):
     """

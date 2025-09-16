@@ -1,5 +1,6 @@
 from rest_framework import permissions
 
+
 class IsAdminGroup(permissions.BasePermission):
     """Allows access only to users in the 'admin' group."""
 

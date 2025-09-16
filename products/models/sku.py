@@ -1,6 +1,8 @@
 from django.db import models
+
 from products.models.base import BaseModel
 from products.models.product import Product
+
 
 class ProductSKU(BaseModel):
     """

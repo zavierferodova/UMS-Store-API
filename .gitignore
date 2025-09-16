@@ -1,5 +1,6 @@
-# Python cache
+# Cache
 __pycache__/
+.ruff_cache/
 
 # Environment variables
 .env

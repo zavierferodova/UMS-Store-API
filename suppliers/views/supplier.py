@@ -7,9 +7,8 @@ from api.mixins import CustomPaginationMixin
 from api.pagination import CustomPagination
 from api.utils import api_response
 from authentication.permissions import IsAdminGroup, IsProcurementGroup
-
-from .models import Supplier
-from .serializers import SupplierSerializer
+from suppliers.models.supplier import Supplier
+from suppliers.serializers.supplier import SupplierSerializer
 
 
 class SupplierViewSet(CustomPaginationMixin, viewsets.ModelViewSet):

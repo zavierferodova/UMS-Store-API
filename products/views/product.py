@@ -1,14 +1,17 @@
-from django.db.models import Q
-from rest_framework import status, viewsets, permissions
-from rest_framework.response import Response
-from api.mixins import CustomPaginationMixin
-from api.utils import api_response
-from products.serializers.product import ProductSerializer
-from products.models.product import Product
-from api.pagination import CustomPagination
-from rest_framework.filters import SearchFilter
-from authentication.permissions import IsAdminGroup, IsProcurementGroup
 from uuid import UUID
+
+from django.db.models import Q
+from rest_framework import permissions, status, viewsets
+from rest_framework.filters import SearchFilter
+from rest_framework.response import Response
+
+from api.mixins import CustomPaginationMixin
+from api.pagination import CustomPagination
+from api.utils import api_response
+from authentication.permissions import IsAdminGroup, IsProcurementGroup
+from products.models.product import Product
+from products.serializers.product import ProductSerializer
+
 
 class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
     queryset = Product.objects.all()
@@ -26,7 +29,7 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         else:
             permission_classes = [permissions.AllowAny]
         return [permission() for permission in permission_classes]
-        
+
     def get_queryset(self):
         """
         Returns the queryset with optional ordering and filtering.
@@ -37,7 +40,7 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         - categories: Comma-separated list of category IDs to filter by
         """
         queryset = super().get_queryset()
-        
+
         # Apply category filter if categories parameter is provided
         categories_param = self.request.query_params.get('categories')
         if categories_param:
@@ -52,7 +55,7 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                     queryset = queryset.filter(category_id__in=category_uuids)
             except (ValueError, AttributeError):
                 pass  # Ignore invalid UUIDs
-        
+
         # Only apply status filtering for list requests
         if self.action == 'list':
             status_param = self.request.query_params.get('status', '').lower()
@@ -68,14 +71,14 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
             else:
                 # Default to showing only active products for list view
                 queryset = queryset.filter(is_deleted=False)
-            
+
         # Apply ordering
         ordering = self.request.query_params.get('ordering', 'name')  # Default ordering by name
         if ordering.startswith('-'):
             queryset = queryset.order_by(ordering[1:]).reverse()  # Descending order
         else:
             queryset = queryset.order_by(ordering)  # Ascending order
-            
+
         return queryset
 
     def list(self, request, *args, **kwargs):

@@ -1,6 +1,8 @@
 from rest_framework import serializers
+
 from products.models.image import ProductImage
 from products.models.product import Product
+
 
 class ProductImageSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(required=True, source='filename')

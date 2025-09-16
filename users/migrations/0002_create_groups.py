@@ -2,9 +2,10 @@
 
 from django.db import migrations
 
+
 def create_groups(apps, schema_editor):
     Group = apps.get_model('auth', 'Group')
-    
+
     # Use get_or_create to avoid duplication if rerun
     groups = ['admin', 'procurement', 'cashier']
     for name in groups:

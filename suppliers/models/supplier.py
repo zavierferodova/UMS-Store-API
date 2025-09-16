@@ -1,8 +1,10 @@
 import uuid
+
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import IntegerField, Max, Value
-from django.db.models.functions import Cast, Substr, StrIndex
+from django.db.models.functions import Cast, StrIndex, Substr
+
 
 class Supplier(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
@@ -39,7 +41,7 @@ class Supplier(models.Model):
                 alpha_part = "".join(word[0] for word in words[:3])
 
             alpha_part = alpha_part.upper()
-            
+
             max_num = Supplier.objects.filter(
                 code__regex=r'^\d+\-'
             ).annotate(
@@ -55,5 +57,5 @@ class Supplier(models.Model):
             formatted_numeric_part = str(numeric_part).zfill(4)
 
             self.code = f"{formatted_numeric_part}-{alpha_part}"
-        
+
         super().save(*args, **kwargs)

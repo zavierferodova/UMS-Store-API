@@ -1,7 +1,8 @@
-from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core.management.base import BaseCommand
 from django.db import transaction
+
 
 class Command(BaseCommand):
     help = 'Creates a superuser with a predefined password and assigns to admin group.'
@@ -9,7 +10,7 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         User = get_user_model()
-        
+
         user_data = {
             'email': 'admin@mail.com',
             'password': 'adminmimin',
@@ -23,7 +24,7 @@ class Command(BaseCommand):
 
         try:
             self.stdout.write('Creating admin user...')
-            
+
             user = User.objects.create_superuser(**user_data)
 
             admin_group, _ = Group.objects.get_or_create(name='admin')

@@ -1,9 +1,12 @@
+from datetime import UTC, datetime
+
 from dj_rest_auth.registration.serializers import SocialLoginSerializer
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
-from datetime import datetime, timezone
+
 from users.models import User
+
 
 class CustomSocialLoginSerializer(SocialLoginSerializer):
     def get_cleaned_data(self):
@@ -12,15 +15,15 @@ class CustomSocialLoginSerializer(SocialLoginSerializer):
         if 'username' in data and data['username'] == '':
             data['username'] = None
         return data
-        
+
     def validate(self, attrs):
         attrs = super().validate(attrs)
         user = attrs['user']
-            
+
         # Set name from Google if not already set
         if not user.name:
             user.name = user.socialaccount_set.filter(provider='google').first().extra_data.get('name')
-            
+
         user.save()  # Single save call after all modifications
         return attrs
 
@@ -30,7 +33,7 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
         refresh = RefreshToken(attrs['refresh'])
         access_token_expiration_timestamp = refresh.access_token.get('exp')
         if access_token_expiration_timestamp:
-            dt_object = datetime.fromtimestamp(access_token_expiration_timestamp, tz=timezone.utc)
+            dt_object = datetime.fromtimestamp(access_token_expiration_timestamp, tz=UTC)
             data['access_expiration'] = dt_object.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         return data
 

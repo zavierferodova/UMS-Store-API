@@ -1,5 +1,13 @@
 from django.urls import path
-from .views import CustomGoogleLogin, CustomLoginView, CustomTokenRefreshView, CustomPasswordChangeView, CustomUserDetailsView, UserProfileImageView
+
+from .views import (
+    CustomGoogleLogin,
+    CustomLoginView,
+    CustomPasswordChangeView,
+    CustomTokenRefreshView,
+    CustomUserDetailsView,
+    UserProfileImageView,
+)
 
 urlpatterns = [
     path('/login', CustomLoginView.as_view(), name='rest_login'),

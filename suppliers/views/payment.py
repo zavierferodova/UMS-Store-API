@@ -1,0 +1,123 @@
+from rest_framework import permissions, status, viewsets
+from rest_framework.response import Response
+
+from api.mixins import CustomPaginationMixin
+from api.pagination import CustomPagination
+from api.utils import api_response
+from authentication.permissions import IsAdminGroup, IsProcurementGroup
+from suppliers.models.payment import SupplierPayment
+from suppliers.serializers.payment import SupplierPaymentSerializer
+from rest_framework.filters import SearchFilter
+
+
+class SupplierPaymentViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
+    queryset = SupplierPayment.objects.all()
+    serializer_class = SupplierPaymentSerializer
+    pagination_class = CustomPagination
+    permission_classes = [permissions.IsAuthenticated, (IsAdminGroup | IsProcurementGroup)]
+    filter_backends = [SearchFilter]
+    search_fields = ['supplier__name', 'supplier__code', 'name', 'owner', 'account_number']
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            response_obj = api_response(
+                status=status.HTTP_201_CREATED,
+                success=True,
+                message="Supplier payment created successfully",
+                data=serializer.data
+            )
+            return Response(response_obj.data, status=response_obj.status_code, headers=headers)
+        return api_response(
+            status=status.HTTP_400_BAD_REQUEST,
+            success=False,
+            message="Invalid data",
+            error=serializer.errors
+        )
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data, message="Supplier payments retrieved successfully")
+
+        serializer = self.get_serializer(queryset, many=True)
+        return api_response(
+            status=status.HTTP_200_OK,
+            success=True,
+            message="Supplier payments retrieved successfully",
+            data=serializer.data
+        )
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            return api_response(
+                status=status.HTTP_200_OK,
+                success=True,
+                message="Supplier payment retrieved successfully",
+                data=serializer.data
+            )
+        except SupplierPayment.DoesNotExist:
+            return api_response(
+                status=status.HTTP_404_NOT_FOUND,
+                success=False,
+                message="Supplier payment not found"
+            )
+
+    def partial_update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', True)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        if serializer.is_valid():
+            self.perform_update(serializer)
+            return api_response(
+                status=status.HTTP_200_OK,
+                success=True,
+                message="Supplier payment updated successfully",
+                data=serializer.data
+            )
+        return api_response(
+            status=status.HTTP_400_BAD_REQUEST,
+            success=False,
+            message="Invalid data",
+            error=serializer.errors
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            return api_response(
+                status=status.HTTP_200_OK,
+                success=True,
+                message="Supplier payment deleted successfully"
+            )
+        except SupplierPayment.DoesNotExist:
+            return api_response(
+                status=status.HTTP_404_NOT_FOUND,
+                success=False,
+                message="Supplier payment not found"
+            )
+
+    def list_by_supplier(self, request, *args, **kwargs):
+        supplier_id = kwargs.get('supplier_id')
+        queryset = self.filter_queryset(self.get_queryset().filter(supplier_id=supplier_id))
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data, message="Supplier payments for supplier retrieved "
+                                                                        "successfully")
+
+        serializer = self.get_serializer(queryset, many=True)
+        return api_response(
+            status=status.HTTP_200_OK,
+            success=True,
+            message="Supplier payments for supplier retrieved successfully",
+            data=serializer.data
+        )

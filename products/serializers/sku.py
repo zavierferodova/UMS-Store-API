@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from products.models.sku import ProductSKU
+
 from products.models.product import Product
+from products.models.sku import ProductSKU
+
 
 class ProductSKUSerializer(serializers.ModelSerializer):
     class Meta:

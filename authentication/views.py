@@ -1,15 +1,17 @@
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from dj_rest_auth.registration.views import SocialLoginView
-from .serializers import CustomSocialLoginSerializer, UserProfileImageSerializer
 from dj_rest_auth.views import LoginView, PasswordChangeView, UserDetailsView
-from api.utils import api_response
 from rest_framework import status
-from rest_framework_simplejwt.views import TokenRefreshView
-from .serializers import CustomTokenRefreshSerializer
-from rest_framework.views import APIView
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.views import APIView
+from rest_framework_simplejwt.views import TokenRefreshView
+
+from api.utils import api_response
 from users.serializers import UserSerializer
+
+from .serializers import CustomSocialLoginSerializer, CustomTokenRefreshSerializer, UserProfileImageSerializer
+
 
 class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter

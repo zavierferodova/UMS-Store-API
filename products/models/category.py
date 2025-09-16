@@ -1,5 +1,7 @@
-from products.models.base import BaseModel
 from django.db import models
+
+from products.models.base import BaseModel
+
 
 class ProductCategory(BaseModel):
     name = models.CharField(max_length=128, unique=True)

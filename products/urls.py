@@ -1,4 +1,5 @@
 from django.urls import path
+
 from products.views.category import CategoryViewSet
 from products.views.image import ProductImageViewSet
 from products.views.product import ProductViewSet

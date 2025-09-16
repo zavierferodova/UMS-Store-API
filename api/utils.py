@@ -1,5 +1,7 @@
 from rest_framework.response import Response
-from .serializers import HttpResponseBodySerializer, HttpErrorBodySerializer
+
+from .serializers import HttpErrorBodySerializer, HttpResponseBodySerializer
+
 
 def api_response(
     status: int,

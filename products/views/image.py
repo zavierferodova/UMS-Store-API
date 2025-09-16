@@ -1,9 +1,11 @@
-from rest_framework import status, viewsets, permissions
+from rest_framework import permissions, status, viewsets
 from rest_framework.response import Response
+
 from api.utils import api_response
-from products.serializers.image import ProductImageSerializer, ProductImageBulkSerializer
-from products.models.image import ProductImage
 from authentication.permissions import IsAdminGroup, IsProcurementGroup
+from products.models.image import ProductImage
+from products.serializers.image import ProductImageBulkSerializer, ProductImageSerializer
+
 
 class ProductImageViewSet(viewsets.ModelViewSet):
     queryset = ProductImage.objects.all()

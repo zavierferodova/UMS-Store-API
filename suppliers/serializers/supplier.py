@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from .models import Supplier
+
+from suppliers.models.supplier import Supplier
+
 
 class SupplierSerializer(serializers.ModelSerializer):
     discount = serializers.IntegerField(min_value=0, max_value=100)
@@ -17,18 +19,18 @@ class SupplierSerializer(serializers.ModelSerializer):
     def validate_sales(self, value):
         if value is None:
             return value
-            
+
         if not isinstance(value, list):
             raise serializers.ValidationError('Sales must be a list of objects')
-            
+
         for item in value:
             if not isinstance(item, dict):
                 raise serializers.ValidationError('Each sale item must be an object')
-                
+
             if 'name' not in item or 'phone' not in item:
                 raise serializers.ValidationError('Each sale item must have "name" and "phone" fields')
-                
+
             if not isinstance(item['name'], str) or not isinstance(item['phone'], str):
                 raise serializers.ValidationError('Both "name" and "phone" must be strings')
-                
+
         return value
