@@ -18,6 +18,7 @@ class PurchaseOrder(models.Model):
         max_length=20,
         choices=PaymentMethod.choices,
     )
+    draft = models.BooleanField(default=True)
     completed = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
