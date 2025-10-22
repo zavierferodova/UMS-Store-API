@@ -1,9 +1,11 @@
 from rest_framework import serializers
+
 from purchase_orders.models.purchase_order import PurchaseOrder
 from suppliers.models.supplier import Supplier
 from suppliers.serializers.supplier import SupplierSerializer
 from users.models import User
 from users.serializers import UserSerializer
+
 
 class PurchaseOrderSerializer(serializers.ModelSerializer):
     user_id = serializers.PrimaryKeyRelatedField(

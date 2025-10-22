@@ -1,7 +1,7 @@
 from django.urls import path
 
-from purchase_orders.views.purchase_order import PurchaseOrderViewSet
 from purchase_orders.views.po_item import PoItemViewSet
+from purchase_orders.views.purchase_order import PurchaseOrderViewSet
 
 urlpatterns = [
     path('', PurchaseOrderViewSet.as_view({'get': 'list', 'post': 'create'}), name='purchase-order-list'),

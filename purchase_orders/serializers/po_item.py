@@ -1,8 +1,10 @@
 from rest_framework import serializers
-from purchase_orders.models.po_item import PoItem
+
 from products.models.sku import ProductSKU
-from purchase_orders.models.purchase_order import PurchaseOrder
 from products.serializers.product import ProductSerializer
+from purchase_orders.models.po_item import PoItem
+from purchase_orders.models.purchase_order import PurchaseOrder
+
 
 class PoItemSerializer(serializers.ModelSerializer):
     product_sku = serializers.SlugRelatedField(
