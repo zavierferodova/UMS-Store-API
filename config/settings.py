@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'users',
     'suppliers',
     'products',
+    'purchase_orders',
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_simplejwt',

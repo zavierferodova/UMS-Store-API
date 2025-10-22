@@ -1,4 +1,5 @@
 from rest_framework import permissions, status, viewsets
+from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 
 from api.mixins import CustomPaginationMixin
@@ -7,7 +8,6 @@ from api.utils import api_response
 from authentication.permissions import IsAdminGroup, IsProcurementGroup
 from suppliers.models.payment import SupplierPayment
 from suppliers.serializers.payment import SupplierPaymentSerializer
-from rest_framework.filters import SearchFilter
 
 
 class SupplierPaymentViewSet(CustomPaginationMixin, viewsets.ModelViewSet):

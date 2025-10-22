@@ -22,5 +22,6 @@ from api.views import HomePageView
 urlpatterns = [
     path('', HomePageView.as_view(), name='home'),
     path('admin/', admin.site.urls),
-    path('api', include('api.urls'))
+    path('api', include('api.urls')),
+    path('purchase-orders/', include('purchase_orders.urls'))
 ]

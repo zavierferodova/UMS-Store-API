@@ -36,8 +36,8 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': ('created_at', 'updated_at'),
         })
     )
-    list_display = ('id', 'name', 'category', 'created_at', 'updated_at')
-    list_filter = ('category',)
+    list_display = ('id', 'name', 'price', 'category', 'is_deleted', 'created_at', 'updated_at')
+    list_filter = ('category', 'is_deleted')
     search_fields = ('name', 'description')
     readonly_fields = ('id', 'created_at', 'updated_at')
     inlines = [ProductImageInline, ProductSKUInline]
