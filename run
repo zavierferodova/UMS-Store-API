@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# Help function to display available commands
+function show_help {
+    echo -e "${YELLOW}Usage: ./run.sh [command]${NC}"
+    echo ""
+    echo "Available commands:"
+    echo "  help           - Show this help message"
+    echo "  runserver      - Start the development server"
+    echo "  lint           - Run linter"
+    echo "  lint-fix       - Fix linting issues"
+    echo "  install        - Install dependencies"
+    echo "  makemigrations - Make migrations"
+    echo "  migrate        - Migrate database"
+    echo "  setup          - Setup the project"
+    echo ""
+}
+
+# Function to run the server
+function run_server {
+    poetry run python manage.py runserver
+}
+
+# Function to run linter
+function run_lint {
+    poetry run ruff check .
+}
+
+# Function to fix linting issues
+function fix_lint {
+    poetry run ruff check . --fix
+}
+
+# Function to install dependencies
+function install_deps {
+    poetry install
+}
+
+# Function to make migrations
+function make_migrations {
+    poetry run python manage.py makemigrations
+}
+
+# Function to migrate database
+function migrate_db {
+    poetry run python manage.py migrate
+}
+
+# Function to setup the project
+function setup {
+    bash ./setup.sh
+}
+
+# Main command handler
+case "$1" in
+    runserver)
+        run_server
+        ;;
+    lint)
+        run_lint
+        ;;
+    lint-fix)
+        fix_lint
+        ;;
+    install)
+        install_deps
+        ;;
+    help|--help|-h|*)
+        show_help
+        ;;
+esac
+
+# Exit with success
+exit 0

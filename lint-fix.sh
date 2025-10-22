@@ -1,1 +1,0 @@
-poetry run ruff check . --fix
