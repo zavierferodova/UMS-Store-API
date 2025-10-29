@@ -1,3 +1,5 @@
+from django.db import models
+from django.db.models import Q
 from rest_framework import permissions, status, viewsets
 
 from api.mixins import CustomPaginationMixin
@@ -22,16 +24,90 @@ class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
+        
+        # Handle status filter parameter (comma-separated values: active,deleted)
+        status_param = request.query_params.get('status', '').lower()
+        if status_param:
+            status_values = [v.strip() for v in status_param.split(',')]
+            status_filter = Q()
+            
+            if 'active' in status_values:
+                status_filter |= Q(is_deleted=False)
+            if 'deleted' in status_values:
+                status_filter |= Q(is_deleted=True)
+                
+            if status_filter:
+                queryset = queryset.filter(status_filter)
+        else:
+            # Default to showing only active (non-deleted) purchase orders
+            queryset = queryset.filter(is_deleted=False)
+            
+        # Handle search query parameter
+        search_query = request.query_params.get('search', '').strip()
+        if search_query:
+            queryset = queryset.filter(
+                models.Q(code__icontains=search_query) |
+                models.Q(user__name__icontains=search_query) |
+                models.Q(supplier__name__icontains=search_query)
+            )
+            
+        # Handle draft filter parameter (comma-separated values: true,false)
+        draft_param = request.query_params.get('draft', '').lower()
+        if draft_param:
+            draft_values = [v.strip() for v in draft_param.split(',')]
+            draft_filter = Q()
+            
+            if 'true' in draft_values:
+                draft_filter |= Q(draft=True)
+            if 'false' in draft_values:
+                draft_filter |= Q(draft=False)
+                
+            if draft_filter:
+                queryset = queryset.filter(draft_filter)
+                
+        # Handle completed filter parameter (comma-separated values: true,false)
+        completed_param = request.query_params.get('completed', '').lower()
+        if completed_param:
+            completed_values = [v.strip() for v in completed_param.split(',')]
+            completed_filter = Q()
+            
+            if 'true' in completed_values:
+                completed_filter |= Q(completed=True)
+            if 'false' in completed_values:
+                completed_filter |= Q(completed=False)
+                
+            if completed_filter:
+                queryset = queryset.filter(completed_filter)
+                
+        # Handle payout filter parameter (comma-separated values: cash,partnership)
+        payout_param = request.query_params.get('payout', '').lower()
+        if payout_param:
+            payout_values = [v.strip() for v in payout_param.split(',')]
+            payout_filter = Q()
+            
+            if 'cash' in payout_values:
+                payout_filter |= Q(payout='cash')
+            if 'partnership' in payout_values:
+                payout_filter |= Q(payout='partnership')
+                
+            if payout_filter:
+                queryset = queryset.filter(payout_filter)
+            
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data, message="Purchase orders retrieved successfully")
+            return self.get_paginated_response(
+                serializer.data, 
+                message=f"{len(serializer.data)} purchase orders found" if search_query 
+                        else "Purchase orders retrieved successfully"
+            )
 
         serializer = self.get_serializer(queryset, many=True)
         return api_response(
             status=status.HTTP_200_OK,
             success=True,
-            message="Purchase orders retrieved successfully",
+            message=f"{len(serializer.data)} purchase orders found" if search_query 
+                    else "Purchase orders retrieved successfully",
             data=serializer.data
         )
 
