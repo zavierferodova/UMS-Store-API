@@ -97,8 +97,8 @@ class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(
-                serializer.data, 
-                message=f"{len(serializer.data)} purchase orders found" if search_query 
+                serializer.data,
+                message=f"{len(serializer.data)} purchase orders found" if search_query
                         else "Purchase orders retrieved successfully"
             )
 
@@ -106,7 +106,7 @@ class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         return api_response(
             status=status.HTTP_200_OK,
             success=True,
-            message=f"{len(serializer.data)} purchase orders found" if search_query 
+            message=f"{len(serializer.data)} purchase orders found" if search_query
                     else "Purchase orders retrieved successfully",
             data=serializer.data
         )

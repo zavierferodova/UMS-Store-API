@@ -5,9 +5,8 @@ Replaces the functionality of run and setup.sh scripts.
 """
 
 import os
-import sys
 import subprocess
-from typing import List, Optional
+import sys
 
 # ANSI color codes
 COLORS = {
@@ -21,7 +20,7 @@ def color_print(text: str, color: str) -> None:
     """Print colored text to the console."""
     print(f"{COLORS.get(color, '')}{text}{COLORS['NC']}")
 
-def run_command(command: List[str], cwd: Optional[str] = None) -> int:
+def run_command(command: list[str], cwd: str | None = None) -> int:
     """Run a shell command and return the exit code."""
     try:
         result = subprocess.run(

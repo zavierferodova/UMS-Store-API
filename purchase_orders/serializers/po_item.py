@@ -1,16 +1,13 @@
 from rest_framework import serializers
 
 from products.models.sku import ProductSKU
-from products.serializers.product import ProductSerializer
+from products.serializers.product import ProductSingleSKUSerializer
 from purchase_orders.models.po_item import PoItem
 from purchase_orders.models.purchase_order import PurchaseOrder
 
+
 class PoItemSerializer(serializers.ModelSerializer):
-    product_sku = serializers.SlugRelatedField(
-        queryset=ProductSKU.objects.all(),
-        slug_field='sku'
-    )
-    product = ProductSerializer(source='product_sku.product', read_only=True)
+    product = ProductSingleSKUSerializer(source='product_sku.product', read_only=True)
     purchase_order = serializers.PrimaryKeyRelatedField(
         queryset=PurchaseOrder.objects.all(),
         required=False,
@@ -22,7 +19,6 @@ class PoItemSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "purchase_order",
-            "product_sku",
             "product",
             "price",
             "amounts",

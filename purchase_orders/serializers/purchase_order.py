@@ -1,13 +1,12 @@
 
 from rest_framework import serializers
+
 from purchase_orders.models.purchase_order import PurchaseOrder
-from purchase_orders.models.po_item import PoItem
-from products.models.sku import ProductSKU
+from purchase_orders.serializers.po_item import NestedPoItemSerializer, PoItemSerializer
 from suppliers.models.supplier import Supplier
 from suppliers.serializers.supplier import SupplierSerializer
 from users.models import User
 from users.serializers import UserSerializer
-from purchase_orders.serializers.po_item import PoItemSerializer, NestedPoItemSerializer
 
 
 class PurchaseOrderSerializer(serializers.ModelSerializer):

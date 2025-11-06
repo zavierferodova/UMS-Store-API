@@ -77,3 +77,32 @@ class ProductSerializer(serializers.ModelSerializer):
 
         representation['skus'] = ProductSKUSerializer(instance.skus.all().order_by('created_at'), many=True).data
         return representation
+
+
+class ProductSingleSKUSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=ProductCategory.objects.all(),
+        allow_null=True,
+        required=False
+    )
+    images = ProductImageNestedOutputSerializer(many=True, read_only=True, source='productimage_set')
+    sku = serializers.CharField(
+        max_length=50,
+        validators=[RegexValidator(r'^[a-zA-Z0-9]*$', 'Only alphanumeric characters are allowed for SKU.')],
+        write_only=True,
+        required=True
+    )
+
+    class Meta:
+        model = Product
+        fields = ['id', 'images', 'name', 'description', 'price', 'category', 'sku', 'additional_info', 'is_deleted', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.category:
+            representation['category'] = ProductCategorySerializer(instance.category).data
+
+        representation['sku'] = ProductSKUSerializer(instance.skus.all().order_by('created_at').first()).data
+        return representation
+
