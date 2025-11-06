@@ -6,7 +6,7 @@ from products.views.product import ProductViewSet
 from products.views.sku import ProductSKUViewSet
 
 urlpatterns = [
-    path('/sku', ProductSKUViewSet.as_view({'post': 'create'}), name='sku-create'),
+    path('/sku', ProductSKUViewSet.as_view({'get': 'list', 'post': 'create'}), name='sku-list'),
     path('/sku/<str:sku>/check', ProductSKUViewSet.as_view({'get': 'check'}), name='sku-check'),
     path('/sku/<str:sku>', ProductSKUViewSet.as_view({'patch': 'partial_update'}), name='sku-update'),
     path('/categories', CategoryViewSet.as_view({'get': 'list', 'post': 'create'}), name='category-list'),

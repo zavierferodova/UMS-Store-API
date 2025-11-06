@@ -11,7 +11,7 @@ from purchase_orders.serializers.purchase_order import PurchaseOrderSerializer
 
 
 class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
-    queryset = PurchaseOrder.objects.all()
+    queryset = PurchaseOrder.objects.all().order_by('-draft', '-created_at')
     serializer_class = PurchaseOrderSerializer
     pagination_class = CustomPagination
 

@@ -5,7 +5,6 @@ from products.serializers.product import ProductSerializer
 from purchase_orders.models.po_item import PoItem
 from purchase_orders.models.purchase_order import PurchaseOrder
 
-
 class PoItemSerializer(serializers.ModelSerializer):
     product_sku = serializers.SlugRelatedField(
         queryset=ProductSKU.objects.all(),
@@ -41,3 +40,16 @@ class PoItemSerializer(serializers.ModelSerializer):
             if purchase_order_id:
                 validated_data['purchase_order'] = PurchaseOrder.objects.get(pk=purchase_order_id)
         return super().create(validated_data)
+
+class NestedPoItemSerializer(serializers.Serializer):
+    """Serializer for creating items when creating a purchase order"""
+    product_sku = serializers.SlugRelatedField(
+        queryset=ProductSKU.objects.all(),
+        slug_field='sku'
+    )
+    price = serializers.IntegerField()
+    amounts = serializers.IntegerField()
+    supplier_discount = serializers.FloatField(required=False, allow_null=True)
+    
+    def create(self, validated_data):
+        return PoItem.objects.create(**validated_data)
