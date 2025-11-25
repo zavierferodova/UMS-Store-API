@@ -7,5 +7,6 @@ urlpatterns = [
     path('', PurchaseOrderViewSet.as_view({'get': 'list', 'post': 'create'}), name='purchase-order-list'),
     path('/<pk>', PurchaseOrderViewSet.as_view({'get': 'retrieve', 'patch': 'partial_update', 'delete': 'destroy'}), name='purchase-order-detail'),
     path('/<purchase_order_pk>/items', PoItemViewSet.as_view({'get': 'list', 'post': 'create'}), name='po-item-list'),
+    path('/<purchase_order_pk>/items/replace', PoItemViewSet.as_view({'post': 'replace_items'}), name='po-item-replace'),
     path('/<purchase_order_pk>/items/<pk>', PoItemViewSet.as_view({'get': 'retrieve', 'patch': 'partial_update', 'delete': 'destroy'}), name='po-item-detail'),
 ]

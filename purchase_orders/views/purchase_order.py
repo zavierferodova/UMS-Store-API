@@ -11,9 +11,26 @@ from purchase_orders.serializers.purchase_order import PurchaseOrderSerializer
 
 
 class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
-    queryset = PurchaseOrder.objects.all().order_by('-draft', '-created_at')
+
     serializer_class = PurchaseOrderSerializer
     pagination_class = CustomPagination
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.groups.filter(name='admin').exists():
+            qs = PurchaseOrder.objects.exclude(
+                status=PurchaseOrder.Status.DRAFT,
+            ) | PurchaseOrder.objects.filter(
+                status=PurchaseOrder.Status.DRAFT,
+                requester=user
+            )
+
+            return qs.order_by('-created_at')
+        elif user.groups.filter(name='procurement').exists():
+            qs = PurchaseOrder.objects.filter(requester=user)
+            return qs.order_by('-created_at')
+
+        return PurchaseOrder.objects.none()
 
     def get_permissions(self):
         """
@@ -47,37 +64,23 @@ class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         if search_query:
             queryset = queryset.filter(
                 models.Q(code__icontains=search_query) |
-                models.Q(user__name__icontains=search_query) |
+                models.Q(requester__name__icontains=search_query) |
+                models.Q(approver__name__icontains=search_query) |
                 models.Q(supplier__name__icontains=search_query)
             )
             
-        # Handle draft filter parameter (comma-separated values: true,false)
-        draft_param = request.query_params.get('draft', '').lower()
-        if draft_param:
-            draft_values = [v.strip() for v in draft_param.split(',')]
-            draft_filter = Q()
+        # Handle status filter parameter (comma-separated values: draft,waiting_approval,approved,rejected,completed)
+        status_filter_param = request.query_params.get('po_status', '').lower()
+        if status_filter_param:
+            status_values = [v.strip() for v in status_filter_param.split(',')]
+            status_query_filter = Q()
             
-            if 'true' in draft_values:
-                draft_filter |= Q(draft=True)
-            if 'false' in draft_values:
-                draft_filter |= Q(draft=False)
-                
-            if draft_filter:
-                queryset = queryset.filter(draft_filter)
-                
-        # Handle completed filter parameter (comma-separated values: true,false)
-        completed_param = request.query_params.get('completed', '').lower()
-        if completed_param:
-            completed_values = [v.strip() for v in completed_param.split(',')]
-            completed_filter = Q()
-            
-            if 'true' in completed_values:
-                completed_filter |= Q(completed=True)
-            if 'false' in completed_values:
-                completed_filter |= Q(completed=False)
-                
-            if completed_filter:
-                queryset = queryset.filter(completed_filter)
+            for status_value in status_values:
+                if status_value in ['draft', 'waiting_approval', 'approved', 'rejected', 'completed']:
+                    status_query_filter |= Q(status=status_value)
+                    
+            if status_query_filter:
+                queryset = queryset.filter(status_query_filter)
                 
         # Handle payout filter parameter (comma-separated values: cash,partnership)
         payout_param = request.query_params.get('payout', '').lower()

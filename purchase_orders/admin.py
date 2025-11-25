@@ -6,9 +6,9 @@ from purchase_orders.models.purchase_order import PurchaseOrder
 
 @admin.register(PurchaseOrder)
 class PurchaseOrderAdmin(admin.ModelAdmin):
-    list_display = ("code", "user", "supplier", "payout", "completed", "created_at", "updated_at")
-    list_filter = ("completed", "payout", "is_deleted")
-    search_fields = ("code", "user__username", "supplier__name")
+    list_display = ("code", "requester", "approver", "supplier", "payout", "status", "created_at", "updated_at")
+    list_filter = ("status", "payout", "is_deleted")
+    search_fields = ("code", "requester__username", "approver__username", "supplier__name")
 
 @admin.register(PoItem)
 class PoItemAdmin(admin.ModelAdmin):

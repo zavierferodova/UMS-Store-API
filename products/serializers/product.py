@@ -100,9 +100,13 @@ class ProductSingleSKUSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+
         if instance.category:
             representation['category'] = ProductCategorySerializer(instance.category).data
 
-        representation['sku'] = ProductSKUSerializer(instance.skus.all().order_by('created_at').first()).data
+        # Check if a specific SKU is provided in the context
+        product_sku = self.context.get('product_sku')
+        representation['sku'] = ProductSKUSerializer(product_sku).data
+        
         return representation
 

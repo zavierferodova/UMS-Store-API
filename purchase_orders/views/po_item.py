@@ -1,11 +1,13 @@
 from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action
 
 from api.mixins import CustomPaginationMixin
 from api.pagination import CustomPagination
 from api.utils import api_response
 from authentication.permissions import IsAdminGroup, IsProcurementGroup
 from purchase_orders.models.po_item import PoItem
-from purchase_orders.serializers.po_item import PoItemSerializer
+from purchase_orders.models.purchase_order import PurchaseOrder
+from purchase_orders.serializers.po_item import PoItemSerializer, ReplacePoItemsSerializer
 
 
 class PoItemViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
@@ -92,4 +94,80 @@ class PoItemViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
                 success=False,
                 message="PO item not found"
+            )
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            
+            # Check if purchase order is in draft status
+            if instance.purchase_order.status != PurchaseOrder.Status.DRAFT:
+                return api_response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    success=False,
+                    message="The purchase order item only can be deleted if purchase order is in draft status"
+                )
+            
+            self.perform_destroy(instance)
+            return api_response(
+                status=status.HTTP_200_OK,
+                success=True,
+                message="PO item deleted successfully"
+            )
+        except PoItem.DoesNotExist:
+            return api_response(
+                status=status.HTTP_404_NOT_FOUND,
+                success=False,
+                message="PO item not found"
+            )
+
+    @action(detail=False, methods=['post'], url_path='replace')
+    def replace_items(self, request, purchase_order_pk=None):
+        """
+        Replace all PO items for a purchase order.
+        Deletes all existing items and creates new ones from the provided list.
+        """
+        try:
+            # Get the purchase order
+            purchase_order = PurchaseOrder.objects.get(pk=purchase_order_pk)
+            
+            # Check if purchase order is in draft status
+            if purchase_order.status != PurchaseOrder.Status.DRAFT:
+                return api_response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    success=False,
+                    message="The purchase order items only can be replaced if purchase order is in draft status"
+                )
+            
+            # Validate the request data
+            serializer = ReplacePoItemsSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            # Delete all existing items for this purchase order
+            PoItem.objects.filter(purchase_order=purchase_order).delete()
+            
+            # Create new items
+            items_data = serializer.validated_data['items']
+            created_items = []
+            
+            for item_data in items_data:
+                item_data['purchase_order'] = purchase_order
+                po_item = PoItem.objects.create(**item_data)
+                created_items.append(po_item)
+            
+            # Serialize the created items for response
+            response_serializer = PoItemSerializer(created_items, many=True, context={'request': request})
+            
+            return api_response(
+                status=status.HTTP_200_OK,
+                success=True,
+                message="PO items replaced successfully",
+                data=response_serializer.data
+            )
+            
+        except PurchaseOrder.DoesNotExist:
+            return api_response(
+                status=status.HTTP_404_NOT_FOUND,
+                success=False,
+                message="Purchase order not found"
             )

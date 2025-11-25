@@ -11,12 +11,20 @@ from users.serializers import UserSerializer
 
 class PurchaseOrderSerializer(serializers.ModelSerializer):
     items = NestedPoItemSerializer(many=True, required=False, write_only=True)
-    user_id = serializers.PrimaryKeyRelatedField(
+    requester_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
-        source='user',
+        source='requester',
         write_only=True
     )
-    user = UserSerializer(read_only=True)
+    requester = UserSerializer(read_only=True)
+    approver_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        source='approver',
+        write_only=True,
+        required=False,
+        allow_null=True
+    )
+    approver = UserSerializer(read_only=True)
     supplier_id = serializers.PrimaryKeyRelatedField(
         queryset=Supplier.objects.all(),
         source='supplier',
@@ -29,14 +37,16 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'code',
-            'user_id',
-            'user',
+            'requester_id',
+            'requester',
+            'approver_id',
+            'approver',
             'supplier_id',
             'supplier',
             'payout',
             'note',
-            'draft',
-            'completed',
+            'status',
+            'rejection_message',
             'is_deleted',
             'created_at',
             'updated_at',
