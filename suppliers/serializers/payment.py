@@ -2,16 +2,18 @@ from rest_framework import serializers
 
 from suppliers.models.payment import SupplierPayment
 from suppliers.models.supplier import Supplier
+from suppliers.serializers.supplier import SupplierSerializer
 
 
 class SupplierPaymentSerializer(serializers.ModelSerializer):
     supplier_id = serializers.PrimaryKeyRelatedField(
         queryset=Supplier.objects.all(),
         source='supplier',
-        write_only=False
+        write_only=True
     )
+    supplier = SupplierSerializer(read_only=True)
 
     class Meta:
         model = SupplierPayment
-        fields = ['id', 'supplier_id', 'name', 'owner', 'account_number', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        fields = ['id', 'supplier_id', 'supplier', 'name', 'owner', 'account_number', 'is_deleted', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'is_deleted', 'created_at', 'updated_at']

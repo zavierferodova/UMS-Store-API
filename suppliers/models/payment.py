@@ -11,6 +11,7 @@ class SupplierPayment(models.Model):
     name = models.CharField(max_length=128)
     owner = models.CharField(max_length=128)
     account_number = models.CharField(max_length=64)
+    is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

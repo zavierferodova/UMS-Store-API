@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import permissions, status, viewsets
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
@@ -11,12 +12,36 @@ from suppliers.serializers.payment import SupplierPaymentSerializer
 
 
 class SupplierPaymentViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
-    queryset = SupplierPayment.objects.all()
     serializer_class = SupplierPaymentSerializer
     pagination_class = CustomPagination
     permission_classes = [permissions.IsAuthenticated, (IsAdminGroup | IsProcurementGroup)]
     filter_backends = [SearchFilter]
     search_fields = ['supplier__name', 'supplier__code', 'name', 'owner', 'account_number']
+
+    def get_queryset(self):
+        """
+        Custom filter for `status` (active, deleted).
+        Default to showing only active payments for list view.
+        """
+        queryset = SupplierPayment.objects.all()
+
+        # Only apply status filtering for list requests
+        if self.action == 'list':
+            status_param = self.request.query_params.get('status', '').lower()
+            if status_param:
+                status_list = [s.strip() for s in status_param.split(',')]
+                status_filter = Q()
+                if 'active' in status_list:
+                    status_filter |= Q(is_deleted=False)
+                if 'deleted' in status_list:
+                    status_filter |= Q(is_deleted=True)
+                if status_filter:
+                    queryset = queryset.filter(status_filter)
+            else:
+                # Default to showing only active payments for list view
+                queryset = queryset.filter(is_deleted=False)
+
+        return queryset
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -91,7 +116,15 @@ class SupplierPaymentViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
-            self.perform_destroy(instance)
+            if instance.is_deleted:
+                return api_response(
+                    status=status.HTTP_404_NOT_FOUND,
+                    success=False,
+                    message="Supplier payment not found"
+                )
+            
+            instance.is_deleted = True
+            instance.save(update_fields=['is_deleted', 'updated_at'])
             return api_response(
                 status=status.HTTP_200_OK,
                 success=True,
