@@ -16,4 +16,4 @@ class SupplierPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = SupplierPayment
         fields = ['id', 'supplier_id', 'supplier', 'name', 'owner', 'account_number', 'is_deleted', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'is_deleted', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
