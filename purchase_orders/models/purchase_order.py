@@ -44,5 +44,5 @@ class PurchaseOrder(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.code:
-            self.code = f"PO-{datetime.now().strftime('%Y%m%d')}-{self.id.hex[:4]}"
+            self.code = f"PO/{datetime.now().strftime('%Y%m%d')}/{self.id.hex[:4]}"
         super().save(*args, **kwargs)

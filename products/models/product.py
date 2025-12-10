@@ -9,7 +9,7 @@ class Product(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=128)
     description = models.TextField()
-    price = models.BigIntegerField()
+    price = models.BigIntegerField(default=0)
     additional_info = models.JSONField(null=True, blank=True)
     category = models.ForeignKey(ProductCategory, on_delete=models.SET_NULL, null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
