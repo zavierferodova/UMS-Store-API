@@ -31,8 +31,7 @@ class PoItem(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Purchase order item"
-        verbose_name_plural = "Purchase order items"
+        db_table = 'po_items'
 
     def __str__(self):
         return f"{self.amounts} of {self.product_sku.product.name} for {self.purchase_order}"

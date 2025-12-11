@@ -2,7 +2,7 @@ from rest_framework import permissions, status, viewsets
 from rest_framework.response import Response
 
 from api.utils import api_response
-from authentication.permissions import IsAdminGroup, IsProcurementGroup
+from authentication.permissions import IsAdmin, IsProcurement
 from products.models.image import ProductImage
 from products.serializers.image import ProductImageBulkSerializer, ProductImageSerializer
 
@@ -10,14 +10,14 @@ from products.serializers.image import ProductImageBulkSerializer, ProductImageS
 class ProductImageViewSet(viewsets.ModelViewSet):
     queryset = ProductImage.objects.all()
     serializer_class = ProductImageSerializer
-    permission_classes = [permissions.IsAuthenticated, (IsAdminGroup | IsProcurementGroup)]
+    permission_classes = [permissions.IsAuthenticated, (IsAdmin | IsProcurement)]
 
     def get_permissions(self):
         """
         Instantiates and returns the list of permissions that this view requires.
         """
         if self.action in ['create', 'partial_update', 'destroy']:
-            permission_classes = [permissions.IsAuthenticated, (IsAdminGroup | IsProcurementGroup)]
+            permission_classes = [permissions.IsAuthenticated, (IsAdmin | IsProcurement)]
         else:
             permission_classes = [permissions.AllowAny]
         return [permission() for permission in permission_classes]

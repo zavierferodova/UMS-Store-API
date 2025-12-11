@@ -1,4 +1,3 @@
-from django.contrib.auth.models import Group
 from django.db.models import Q
 from rest_framework import permissions, status, viewsets
 from rest_framework.filters import SearchFilter
@@ -7,7 +6,7 @@ from rest_framework.response import Response
 from api.mixins import CustomPaginationMixin
 from api.pagination import CustomPagination
 from api.utils import api_response
-from authentication.permissions import IsAdminGroup, IsProcurementGroup
+from authentication.permissions import IsAdmin, IsProcurement
 
 from .models import User
 from .serializers import UserSerializer
@@ -27,11 +26,11 @@ class UserViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         - Update (partial_update) → Admin only
         """
         if self.action == 'list':
-            permission_classes = [permissions.IsAuthenticated, (IsAdminGroup | IsProcurementGroup)]
+            permission_classes = [permissions.IsAuthenticated, (IsAdmin | IsProcurement)]
         elif self.action == 'retrieve':
-            permission_classes = [permissions.IsAuthenticated, (IsAdminGroup | IsProcurementGroup)]
+            permission_classes = [permissions.IsAuthenticated, (IsAdmin | IsProcurement)]
         elif self.action in ['partial_update', 'update']:
-            permission_classes = [permissions.IsAuthenticated, IsAdminGroup]
+            permission_classes = [permissions.IsAuthenticated, IsAdmin]
         else:
             permission_classes = [permissions.IsAuthenticated]
         return [permission() for permission in permission_classes]
@@ -52,7 +51,7 @@ class UserViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         if roles:
             try:
                 role_list = [role.strip().lower() for role in roles.split(',')]
-                queryset = queryset.filter(groups__name__in=role_list).distinct()
+                queryset = queryset.filter(role__in=role_list).distinct()
             except Exception:
                 pass
 
@@ -116,7 +115,7 @@ class UserViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         # Handle role update
         role_name = request.data.get("role")
         if role_name:
-            valid_roles = ["admin", "procurement", "cashier"]
+            valid_roles = ["admin", "procurement", "cashier", "checker"]
             if role_name not in valid_roles:
                 response_obj = api_response(
                     status=status.HTTP_400_BAD_REQUEST,
@@ -124,21 +123,9 @@ class UserViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                     message=f"Invalid role provided. Role must be one of {valid_roles}."
                 )
                 return Response(response_obj.data, status=response_obj.status_code)
-
-            # Remove existing valid roles
-            groups_to_remove = instance.groups.filter(name__in=valid_roles)
-            instance.groups.remove(*groups_to_remove)
-
-            try:
-                group = Group.objects.get(name=role_name)
-                instance.groups.add(group)
-            except Group.DoesNotExist:
-                response_obj = api_response(
-                    status=status.HTTP_400_BAD_REQUEST,
-                    success=False,
-                    message=f"Role group {role_name} does not exist."
-                )
-                return Response(response_obj.data, status=response_obj.status_code)
+            
+            instance.role = role_name
+            instance.save()
 
         # Pass data to serializer (excluding role)
         mutable_data = request.data.copy()

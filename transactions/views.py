@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 from api.mixins import CustomPaginationMixin
 from api.pagination import CustomPagination
 from api.utils import api_response
-from authentication.permissions import IsAdminGroup, IsCashierGroup
+from authentication.permissions import IsAdmin, IsCashier
 
 from .models import Transaction
 from .serializers import TransactionSerializer, TransactionUpdateSerializer
@@ -16,15 +16,15 @@ class TransactionViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
     pagination_class = CustomPagination
-    permission_classes = [permissions.IsAuthenticated, (IsAdminGroup | IsCashierGroup)]
+    permission_classes = [permissions.IsAuthenticated, (IsAdmin | IsCashier)]
 
     def get_queryset(self):
         queryset = Transaction.objects.all().order_by('-created_at')
         user = self.request.user
 
-        if user.groups.filter(name='admin').exists():
+        if user.role == 'admin':
             queryset = queryset.filter(is_saved=False)
-        elif user.groups.filter(name='cashier').exists():
+        elif user.role == 'cashier':
             queryset = queryset.filter(cashier=user)
         
         if self.action == 'list':

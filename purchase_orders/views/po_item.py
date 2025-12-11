@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from api.mixins import CustomPaginationMixin
 from api.pagination import CustomPagination
 from api.utils import api_response
-from authentication.permissions import IsAdminGroup, IsProcurementGroup
+from authentication.permissions import IsAdmin, IsChecker, IsProcurement
 from purchase_orders.models.po_item import PoItem
 from purchase_orders.models.purchase_order import PurchaseOrder
 from purchase_orders.serializers.po_item import PoItemSerializer, ReplacePoItemsSerializer
@@ -22,7 +22,7 @@ class PoItemViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         """
         Instantiates and returns the list of permissions that this view requires.
         """
-        permission_classes = [permissions.IsAuthenticated, (IsAdminGroup | IsProcurementGroup)]
+        permission_classes = [permissions.IsAuthenticated, (IsAdmin | IsProcurement | IsChecker)]
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):

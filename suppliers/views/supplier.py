@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from api.mixins import CustomPaginationMixin
 from api.pagination import CustomPagination
 from api.utils import api_response
-from authentication.permissions import IsAdminGroup, IsProcurementGroup
+from authentication.permissions import IsAdmin, IsProcurement
 from suppliers.models.supplier import Supplier
 from suppliers.serializers.supplier import SupplierSerializer
 
@@ -25,7 +25,7 @@ class SupplierViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         - Read → Any authenticated user
         """
         if self.action in ['create', 'partial_update', 'destroy']:
-            permission_classes = [permissions.IsAuthenticated, (IsAdminGroup | IsProcurementGroup)]
+            permission_classes = [permissions.IsAuthenticated, (IsAdmin | IsProcurement)]
         else:
             permission_classes = [permissions.IsAuthenticated]
         return [permission() for permission in permission_classes]

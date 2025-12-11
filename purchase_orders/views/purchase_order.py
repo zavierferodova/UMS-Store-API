@@ -5,7 +5,7 @@ from rest_framework import permissions, status, viewsets
 from api.mixins import CustomPaginationMixin
 from api.pagination import CustomPagination
 from api.utils import api_response
-from authentication.permissions import IsAdminGroup, IsProcurementGroup
+from authentication.permissions import IsAdmin, IsChecker, IsProcurement
 from purchase_orders.models.purchase_order import PurchaseOrder
 from purchase_orders.serializers.purchase_order import PurchaseOrderSerializer
 
@@ -17,7 +17,7 @@ class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.groups.filter(name='admin').exists():
+        if user.role == 'admin' or user.role == 'checker':
             qs = PurchaseOrder.objects.exclude(
                 status=PurchaseOrder.Status.DRAFT,
             ) | PurchaseOrder.objects.filter(
@@ -26,7 +26,7 @@ class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
             )
 
             return qs.order_by('-created_at')
-        elif user.groups.filter(name='procurement').exists():
+        elif user.role == 'procurement':
             qs = PurchaseOrder.objects.filter(requester=user)
             return qs.order_by('-created_at')
 
@@ -36,7 +36,13 @@ class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         """
         Instantiates and returns the list of permissions that this view requires.
         """
-        permission_classes = [permissions.IsAuthenticated, (IsAdminGroup | IsProcurementGroup)]
+        user = self.request.user
+
+        if user.role == 'checker':
+            if self.action in ['list', 'update', 'partial_update', 'retrieve']:
+                permission_classes = [permissions.IsAuthenticated, IsChecker]
+        else:
+            permission_classes = [permissions.IsAuthenticated, (IsAdmin | IsProcurement)]
         return [permission() for permission in permission_classes]
 
     def list(self, request, *args, **kwargs):

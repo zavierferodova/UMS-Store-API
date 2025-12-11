@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from api.mixins import CustomPaginationMixin
 from api.pagination import CustomPagination
 from api.utils import api_response
-from authentication.permissions import IsAdminGroup, IsProcurementGroup
+from authentication.permissions import IsAdmin, IsProcurement
 from suppliers.models.payment import SupplierPayment
 from suppliers.serializers.payment import SupplierPaymentSerializer
 
@@ -14,7 +14,7 @@ from suppliers.serializers.payment import SupplierPaymentSerializer
 class SupplierPaymentViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
     serializer_class = SupplierPaymentSerializer
     pagination_class = CustomPagination
-    permission_classes = [permissions.IsAuthenticated, (IsAdminGroup | IsProcurementGroup)]
+    permission_classes = [permissions.IsAuthenticated, (IsAdmin | IsProcurement)]
     filter_backends = [SearchFilter]
     search_fields = ['supplier__name', 'supplier__code', 'name', 'owner', 'account_number']
 

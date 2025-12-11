@@ -17,7 +17,7 @@ class Product(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'product'
+        db_table = 'products'
 
     def __str__(self):
         return self.name

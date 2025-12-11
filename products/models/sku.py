@@ -18,8 +18,7 @@ class ProductSKU(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Product SKU"
-        verbose_name_plural = "Product SKUs"
+        db_table = "product_skus"
         ordering = ["-created_at"]
 
     def __str__(self):

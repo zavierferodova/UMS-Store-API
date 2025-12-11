@@ -32,6 +32,13 @@ def handle_upload_image(instance, filename):
     return os.path.join('profile_images/', filename)
 
 class User(AbstractBaseUser, PermissionsMixin):
+    ROLE_CHOICES = [
+        ('admin', 'Administrator'),
+        ('procurement', 'Procurement'),
+        ('cashier', 'Cashier'),
+        ('checker', 'Checker'),
+    ]
+
     GENDER_CHOICES = [
         ('male', 'Male'),
         ('female', 'Female'),
@@ -52,6 +59,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     gender = models.CharField(max_length=6, choices=GENDER_CHOICES, blank=True, null=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
+    role = models.CharField(max_length=12, choices=ROLE_CHOICES, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -61,6 +69,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
+
+    class Meta:
+        db_table = 'users'
 
     def save(self, *args, **kwargs):
         # Convert empty username to None before saving

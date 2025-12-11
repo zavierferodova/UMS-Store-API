@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -15,7 +14,7 @@ class Command(BaseCommand):
             'email': 'admin@mail.com',
             'password': 'adminmimin',
             'username': 'admin',
-            'name': 'Administrator'
+            'name': 'Administrator',
         }
 
         if User.objects.filter(email=user_data['email']).exists():
@@ -25,10 +24,8 @@ class Command(BaseCommand):
         try:
             self.stdout.write('Creating admin user...')
 
-            user = User.objects.create_superuser(**user_data)
-
-            admin_group, _ = Group.objects.get_or_create(name='admin')
-            user.groups.add(admin_group)
+            user_data['role'] = 'admin'
+            User.objects.create_superuser(**user_data)
 
             self.stdout.write(self.style.SUCCESS('Admin user created successfully.'))
         except Exception as e:

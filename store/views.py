@@ -1,7 +1,7 @@
 from rest_framework import permissions, status, viewsets
 
 from api.utils import api_response
-from authentication.permissions import IsAdminGroup, IsCashierGroup
+from authentication.permissions import IsAdmin, IsCashier
 
 from .models import Store
 from .serializers import StoreUpdateSerializer
@@ -9,7 +9,7 @@ from .serializers import StoreUpdateSerializer
 
 class StoreViewSet(viewsets.ModelViewSet):
     serializer_class = StoreUpdateSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminGroup | IsCashierGroup]
+    permission_classes = [permissions.IsAuthenticated, IsAdmin | IsCashier]
     queryset = Store.objects.all()
 
     def list(self, request, *args, **kwargs):

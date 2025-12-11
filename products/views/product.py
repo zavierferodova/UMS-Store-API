@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from api.mixins import CustomPaginationMixin
 from api.pagination import CustomPagination
 from api.utils import api_response
-from authentication.permissions import IsAdminGroup, IsProcurementGroup
+from authentication.permissions import IsAdmin, IsProcurement
 from products.models.product import Product
 from products.serializers.product import ProductSerializer
 
@@ -25,7 +25,7 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         Instantiates and returns the list of permissions that this view requires.
         """
         if self.action in ['create', 'partial_update', 'destroy']:
-            permission_classes = [permissions.IsAuthenticated, (IsAdminGroup | IsProcurementGroup)]
+            permission_classes = [permissions.IsAuthenticated, (IsAdmin | IsProcurement)]
         else:
             permission_classes = [permissions.AllowAny]
         return [permission() for permission in permission_classes]

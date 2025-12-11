@@ -21,7 +21,7 @@ class UserAdmin(BaseUserAdmin):
         ('Account', {'fields': ('email', 'username', 'password')}),
         ('Personal Information', {'fields': ('name', 'gender', 'phone', 'address')}),
         ('Additional Information    ', {'fields': ('created_at', 'updated_at')}),
-        ('App Permissions', {'fields': ('groups',)}),
+        ('App Permissions', {'fields': ('role',)}),
         ('Admin Panel Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login',)}),
     )
