@@ -7,6 +7,19 @@ from products.models.sku import ProductSKU
 from products.serializers.category import ProductCategorySerializer
 from products.serializers.image import ProductImageNestedOutputSerializer
 from products.serializers.sku import ProductSKUSerializer
+from suppliers.models.supplier import Supplier
+
+
+class ProductSKUInputSerializer(serializers.Serializer):
+    sku = serializers.CharField(
+        max_length=50,
+        validators=[RegexValidator(r'^[a-zA-Z0-9]*$', 'Only alphanumeric characters are allowed for SKU.')]
+    )
+    supplier = serializers.PrimaryKeyRelatedField(
+        queryset=Supplier.objects.all(),
+        required=False,
+        allow_null=True
+    )
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -17,18 +30,21 @@ class ProductSerializer(serializers.ModelSerializer):
     )
     images = ProductImageNestedOutputSerializer(many=True, read_only=True, source='productimage_set')
     skus = serializers.ListField(
-        child=serializers.CharField(
-            max_length=50,
-            validators=[RegexValidator(r'^[a-zA-Z0-9]*$', 'Only alphanumeric characters are allowed for SKU.')]
-        ),
+        child=ProductSKUInputSerializer(),
         write_only=True,
         required=True
     )
+    price = serializers.IntegerField(required=False, default=0)
 
     class Meta:
         model = Product
         fields = ['id', 'images', 'name', 'description', 'price', 'category', 'skus', 'additional_info', 'is_deleted', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
+
+    def validate_price(self, value):
+        if value == "" or value is None:
+            return 0
+        return value
 
     def validate_additional_info(self, value):
         if value is None:
@@ -52,18 +68,25 @@ class ProductSerializer(serializers.ModelSerializer):
         product = super().create(validated_data)
 
         try:
-            for sku_string in skus_data:
+            for sku_data in skus_data:
+                sku_string = sku_data.get('sku')
+                supplier = sku_data.get('supplier')
+
                 product_sku, created = ProductSKU.objects.get_or_create(
                     sku=sku_string,
-                    defaults={'product': product}
+                    defaults={
+                        'product': product,
+                        'supplier': supplier
+                    }
                 )
                 if not created and product_sku.product != product:
                     raise serializers.ValidationError({"skus": f"SKU '{sku_string}' is already associated with another product."})
                 elif not created and product_sku.product == product:
-                    pass
+                    if supplier:
+                        product_sku.supplier = supplier
+                        product_sku.save()
                 else:
-                    product_sku.product = product
-                    product_sku.save()
+                    pass
         except Exception as e:
             product.delete()
             raise e

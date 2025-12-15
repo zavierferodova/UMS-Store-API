@@ -82,9 +82,8 @@ class TransactionSerializer(serializers.ModelSerializer):
                     **item
                 )
                 
-                # Optional: Update stock here if required by business logic
-                # product_sku_instance = item['product_sku']
-                # product_sku_instance.stock -= item['amount']
-                # product_sku_instance.save()
+                product_sku_instance = item['product_sku']
+                product_sku_instance.stock -= item['amount']
+                product_sku_instance.save()
                 
         return transaction_instance

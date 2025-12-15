@@ -3,6 +3,7 @@ import uuid
 from django.db import models
 
 from products.models.product import Product
+from suppliers.models.supplier import Supplier
 
 
 class ProductSKU(models.Model):
@@ -12,6 +13,7 @@ class ProductSKU(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="skus")
+    supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True, related_name="skus")
     sku = models.CharField(max_length=12, unique=True, blank=False, null=False)
     stock = models.IntegerField(default=0, blank=False, null=False)
     created_at = models.DateTimeField(auto_now_add=True)

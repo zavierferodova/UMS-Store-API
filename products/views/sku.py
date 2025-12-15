@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.db.models import Q
 from django.http import Http404
 from rest_framework import status, viewsets
@@ -33,6 +35,8 @@ class ProductSKUViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         Supports search by SKU number and product name via the 'search' query parameter.
         Supports pagination via 'page' and 'limit' query parameters.
         Supports status filter (active/deleted) via 'status' query parameter.
+        Supports filtering by supplier via 'supplier_id' query parameter.
+        Supports filtering by categories via 'categories' query parameter (comma-separated UUIDs).
         """
         queryset = self.filter_queryset(self.get_queryset())
 
@@ -51,6 +55,26 @@ class ProductSKUViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
             # Default to showing only active (non-deleted) products
             queryset = queryset.filter(product__is_deleted=False)
 
+        # Filter by supplier if provided
+        supplier_id = request.query_params.get('supplier_id')
+        if supplier_id:
+            queryset = queryset.filter(supplier_id=supplier_id)
+        # Apply category filter if categories parameter is provided
+        categories_param = request.query_params.get('categories')
+        if categories_param:
+            try:
+                category_uuids = []
+                for cid in categories_param.split(','):
+                    try:
+                        category_uuids.append(UUID(cid.strip()))
+                    except (ValueError, AttributeError):
+                        continue
+                if category_uuids:
+                    queryset = queryset.filter(product__category_id__in=category_uuids)
+            except (ValueError, AttributeError):
+                pass
+
+        
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

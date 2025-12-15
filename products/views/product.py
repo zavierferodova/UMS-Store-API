@@ -54,7 +54,7 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                 if category_uuids:
                     queryset = queryset.filter(category_id__in=category_uuids)
             except (ValueError, AttributeError):
-                pass  # Ignore invalid UUIDs
+                pass
 
         # Only apply status filtering for list requests
         if self.action == 'list':

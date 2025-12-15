@@ -2,13 +2,20 @@ from rest_framework import serializers
 
 from products.models.product import Product
 from products.models.sku import ProductSKU
+from suppliers.serializers.supplier import SupplierSerializer
 
 
 class ProductSKUSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductSKU
-        fields = ['id', 'sku', 'stock']
+        fields = ['id', 'sku', 'stock', 'supplier']
         read_only_fields = ['id']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.supplier:
+            representation['supplier'] = SupplierSerializer(instance.supplier).data
+        return representation
 
     def validate_stock(self, value):
         if value < 0:
@@ -23,8 +30,14 @@ class ProductSKUCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductSKU
-        fields = ['id', 'sku', 'stock', 'product_id']
+        fields = ['id', 'sku', 'stock', 'product_id', 'supplier']
         read_only_fields = ['id']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.supplier:
+            representation['supplier'] = SupplierSerializer(instance.supplier).data
+        return representation
 
     def validate_stock(self, value):
         if value < 0:

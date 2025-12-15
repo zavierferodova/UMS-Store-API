@@ -152,10 +152,31 @@ class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
+            old_status = instance.status
+
+            # Constraint: If already approved, can only transition to completed
+            if old_status == PurchaseOrder.Status.APPROVED:
+                new_status = request.data.get('status')
+                if new_status and new_status != PurchaseOrder.Status.COMPLETED and new_status != PurchaseOrder.Status.APPROVED:
+                    return api_response(
+                        status=status.HTTP_400_BAD_REQUEST,
+                        success=False,
+                        message="Approved purchase orders can only be updated to Completed status",
+                        data=None
+                    )
+
             partial = kwargs.pop('partial', False)
             serializer = self.get_serializer(instance, data=request.data, partial=partial)
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
+
+            # Check for status transition to APPROVED
+            if old_status != PurchaseOrder.Status.APPROVED and instance.status == PurchaseOrder.Status.APPROVED:
+                # Update stock
+                for item in instance.items.all():
+                    sku = item.product_sku
+                    sku.stock += item.amounts
+                    sku.save()
 
             return api_response(
                 status=status.HTTP_200_OK,
