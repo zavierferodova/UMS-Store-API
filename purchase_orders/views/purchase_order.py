@@ -33,9 +33,6 @@ class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         return PurchaseOrder.objects.none()
 
     def get_permissions(self):
-        """
-        Instantiates and returns the list of permissions that this view requires.
-        """
         user = self.request.user
 
         if user.role == 'checker':
@@ -47,23 +44,6 @@ class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        
-        # Handle status filter parameter (comma-separated values: active,deleted)
-        status_param = request.query_params.get('status', '').lower()
-        if status_param:
-            status_values = [v.strip() for v in status_param.split(',')]
-            status_filter = Q()
-            
-            if 'active' in status_values:
-                status_filter |= Q(is_deleted=False)
-            if 'deleted' in status_values:
-                status_filter |= Q(is_deleted=True)
-                
-            if status_filter:
-                queryset = queryset.filter(status_filter)
-        else:
-            # Default to showing only active (non-deleted) purchase orders
-            queryset = queryset.filter(is_deleted=False)
             
         # Handle search query parameter
         search_query = request.query_params.get('search', '').strip()
@@ -183,33 +163,6 @@ class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                 success=True,
                 message="Purchase order updated successfully",
                 data=serializer.data
-            )
-        except PurchaseOrder.DoesNotExist:
-            return api_response(
-                status=status.HTTP_404_NOT_FOUND,
-                success=False,
-                message="Purchase order not found",
-                data=None
-            )
-
-    def destroy(self, request, *args, **kwargs):
-        try:
-            instance = self.get_object()
-            if instance.is_deleted:
-                return api_response(
-                    status=status.HTTP_404_NOT_FOUND,
-                    success=False,
-                    message="Purchase order not found",
-                    data=None
-                )
-                
-            instance.is_deleted = True
-            instance.save(update_fields=['is_deleted', 'updated_at'])
-            return api_response(
-                status=status.HTTP_200_OK,
-                success=True,
-                message="Purchase order deleted successfully",
-                data=None
             )
         except PurchaseOrder.DoesNotExist:
             return api_response(

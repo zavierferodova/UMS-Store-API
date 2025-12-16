@@ -30,18 +30,10 @@ class ProductSKUViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         return ProductSKUSerializer
 
     def list(self, request, *args, **kwargs):
-        """
-        List all SKUs with pagination and filtering.
-        Supports search by SKU number and product name via the 'search' query parameter.
-        Supports pagination via 'page' and 'limit' query parameters.
-        Supports status filter (active/deleted) via 'status' query parameter.
-        Supports filtering by supplier via 'supplier_id' query parameter.
-        Supports filtering by categories via 'categories' query parameter (comma-separated UUIDs).
-        """
         queryset = self.filter_queryset(self.get_queryset())
 
         # Handle status filter parameter (comma-separated values: active,deleted)
-        status_param = request.query_params.get('status', '').lower()
+        status_param = request.query_params.get('deletion', '').lower()
         if status_param:
             status_values = [v.strip() for v in status_param.split(',')]
             status_filter = Q()

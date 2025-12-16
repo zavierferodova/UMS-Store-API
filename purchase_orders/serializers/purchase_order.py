@@ -47,12 +47,11 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
             'note',
             'status',
             'rejection_message',
-            'is_deleted',
             'created_at',
             'updated_at',
             'items',
         )
-        read_only_fields = ('id', 'code', 'is_deleted', 'created_at', 'updated_at')
+        read_only_fields = ('id', 'code', 'created_at', 'updated_at')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

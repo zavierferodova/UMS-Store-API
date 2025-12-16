@@ -31,14 +31,6 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-        """
-        Returns the queryset with optional ordering and filtering.
-        Default ordering by name (A-Z).
-        
-        Query Parameters:
-        - status: Filter by status (active,deleted) - only applies to list requests
-        - categories: Comma-separated list of category IDs to filter by
-        """
         queryset = super().get_queryset()
 
         # Apply category filter if categories parameter is provided
@@ -56,9 +48,9 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
             except (ValueError, AttributeError):
                 pass
 
-        # Only apply status filtering for list requests
+        # Only apply deletion status filtering for list requests
         if self.action == 'list':
-            status_param = self.request.query_params.get('status', '').lower()
+            status_param = self.request.query_params.get('deletion', '').lower()
             if status_param:
                 status_list = [s.strip() for s in status_param.split(',')]
                 status_filter = Q()

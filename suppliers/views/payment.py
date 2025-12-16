@@ -19,15 +19,10 @@ class SupplierPaymentViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
     search_fields = ['supplier__name', 'supplier__code', 'name', 'owner', 'account_number']
 
     def get_queryset(self):
-        """
-        Custom filter for `status` (active, deleted).
-        Default to showing only active payments for list view.
-        """
         queryset = SupplierPayment.objects.all()
 
-        # Only apply status filtering for list requests
         if self.action == 'list':
-            status_param = self.request.query_params.get('status', '').lower()
+            status_param = self.request.query_params.get('deletion', '').lower()
             if status_param:
                 status_list = [s.strip() for s in status_param.split(',')]
                 status_filter = Q()
