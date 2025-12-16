@@ -29,6 +29,7 @@ class TransactionViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         
         if self.action == 'list':
             search = self.request.query_params.get('search')
+            cashier_id = self.request.query_params.get('cashier_id')
             start_date = self.request.query_params.get('start_date')
             end_date = self.request.query_params.get('end_date')
             transaction_status = self.request.query_params.get('transaction_status')
@@ -36,9 +37,11 @@ class TransactionViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
 
             if search:
                 queryset = queryset.filter(
-                    Q(cashier__name__icontains=search) |
                     Q(code__icontains=search)
                 )
+
+            if cashier_id:
+                queryset = queryset.filter(cashier_id=cashier_id)
 
             if start_date:
                 queryset = queryset.filter(created_at__date__gte=start_date)
