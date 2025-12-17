@@ -65,7 +65,6 @@ class ProductSKUViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                     queryset = queryset.filter(product__category_id__in=category_uuids)
             except (ValueError, AttributeError):
                 pass
-
         
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -119,6 +118,31 @@ class ProductSKUViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                 success=True,
                 message="SKU availability checked successfully",
                 data={'sku': sku, 'is_available': is_available}
+            )
+            return response_obj
+
+    @action(detail=True, methods=['get'])
+    def stock(self, request, sku=None):
+        try:
+            sku_instance = self.get_object()
+            is_available = sku_instance.stock > 0
+            response_obj = api_response(
+                status=status.HTTP_200_OK,
+                success=True,
+                message="Stock availability checked successfully",
+                data={
+                    'sku': sku_instance.sku,
+                    'stock': sku_instance.stock,
+                    'is_available': is_available
+                }
+            )
+            return response_obj
+        except (Http404, ProductSKU.DoesNotExist):
+            response_obj = api_response(
+                status=status.HTTP_404_NOT_FOUND,
+                success=False,
+                message="SKU not found.",
+                error="SKU not found."
             )
             return response_obj
 

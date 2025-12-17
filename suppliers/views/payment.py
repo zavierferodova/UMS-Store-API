@@ -36,7 +36,7 @@ class SupplierPaymentViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                 # Default to showing only active payments for list view
                 queryset = queryset.filter(is_deleted=False)
 
-        return queryset
+        return queryset.order_by('-updated_at')
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

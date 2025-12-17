@@ -12,7 +12,7 @@ from products.serializers.category import ProductCategorySerializer
 
 
 class CategoryViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
-    queryset = ProductCategory.objects.all().order_by('name')
+    queryset = ProductCategory.objects.all().order_by('-updated_at')
     serializer_class = ProductCategorySerializer
     pagination_class = CustomPagination
     filter_backends = [SearchFilter]

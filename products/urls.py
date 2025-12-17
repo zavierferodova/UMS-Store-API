@@ -4,11 +4,14 @@ from products.views.category import CategoryViewSet
 from products.views.image import ProductImageViewSet
 from products.views.product import ProductViewSet
 from products.views.sku import ProductSKUViewSet
+from products.views.catalogue import CatalogueViewSet
 
 urlpatterns = [
     path('/sku', ProductSKUViewSet.as_view({'get': 'list', 'post': 'create'}), name='sku-list'),
     path('/sku/<str:sku>/check', ProductSKUViewSet.as_view({'get': 'check'}), name='sku-check'),
+    path('/sku/<str:sku>/stock', ProductSKUViewSet.as_view({'get': 'stock'}), name='sku-stock'),
     path('/sku/<str:sku>', ProductSKUViewSet.as_view({'patch': 'partial_update'}), name='sku-update'),
+    path('/catalogue', CatalogueViewSet.as_view({'get': 'list'}), name='catalogue-list'),
     path('/categories', CategoryViewSet.as_view({'get': 'list', 'post': 'create'}), name='category-list'),
     path('/categories/<pk>', CategoryViewSet.as_view({'get': 'retrieve', 'patch': 'partial_update', 'delete': 'destroy'}), name='category-detail'),
     path('/images', ProductImageViewSet.as_view({'post': 'create'}), name='product-image-list'),

@@ -32,7 +32,6 @@ class SupplierViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Supplier.objects.all()
-        ordering = self.request.query_params.get('ordering', 'name')  # Default ordering by name
 
         if self.action == 'list':
             status_param = self.request.query_params.get('deletion', '').lower()
@@ -49,13 +48,7 @@ class SupplierViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                 # Default to showing only active suppliers for list view
                 queryset = queryset.filter(is_deleted=False)
 
-        # Apply ordering
-        if ordering.startswith('-'):
-            queryset = queryset.order_by(ordering[1:]).reverse()  # Descending order
-        else:
-            queryset = queryset.order_by(ordering)  # Ascending order
-
-        return queryset
+        return queryset.order_by('-updated_at')
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())

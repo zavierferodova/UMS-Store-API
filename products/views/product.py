@@ -64,14 +64,7 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                 # Default to showing only active products for list view
                 queryset = queryset.filter(is_deleted=False)
 
-        # Apply ordering
-        ordering = self.request.query_params.get('ordering', 'name')  # Default ordering by name
-        if ordering.startswith('-'):
-            queryset = queryset.order_by(ordering[1:]).reverse()  # Descending order
-        else:
-            queryset = queryset.order_by(ordering)  # Ascending order
-
-        return queryset
+        return queryset.order_by('-updated_at')
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())

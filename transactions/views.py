@@ -19,7 +19,7 @@ class TransactionViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, (IsAdmin | IsCashier)]
 
     def get_queryset(self):
-        queryset = Transaction.objects.all().order_by('-created_at')
+        queryset = Transaction.objects.all().order_by('-updated_at')
         user = self.request.user
 
         if user.role == 'admin':

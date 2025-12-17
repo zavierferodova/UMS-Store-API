@@ -57,7 +57,6 @@ class ProductSKUListSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
     sku = serializers.SerializerMethodField()
-    stock = serializers.IntegerField(read_only=True)
     additional_info = serializers.JSONField(source='product.additional_info', read_only=True)
     is_deleted = serializers.BooleanField(source='product.is_deleted', read_only=True)
     created_at = serializers.DateTimeField(source='product.created_at', read_only=True)
@@ -65,7 +64,7 @@ class ProductSKUListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductSKU
-        fields = ['id', 'images', 'name', 'description', 'price', 'category', 'sku', 'stock', 'additional_info', 'is_deleted', 'created_at', 'updated_at']
+        fields = ['id', 'images', 'name', 'description', 'price', 'category', 'sku', 'additional_info', 'is_deleted', 'created_at', 'updated_at']
 
     def get_category(self, obj):
         if obj.product.category:

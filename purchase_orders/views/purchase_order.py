@@ -25,10 +25,10 @@ class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                 requester=user
             )
 
-            return qs.order_by('-created_at')
+            return qs.order_by('-updated_at')
         elif user.role == 'procurement':
             qs = PurchaseOrder.objects.filter(requester=user)
-            return qs.order_by('-created_at')
+            return qs.order_by('-updated_at')
 
         return PurchaseOrder.objects.none()
 
