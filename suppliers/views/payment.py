@@ -137,21 +137,4 @@ class SupplierPaymentViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                 success=False,
                 message="Supplier payment not found"
             )
-
-    def list_by_supplier(self, request, *args, **kwargs):
-        supplier_id = kwargs.get('supplier_id')
-        queryset = self.filter_queryset(self.get_queryset().filter(supplier_id=supplier_id))
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data, message="Supplier payments for supplier retrieved "
-                                                                        "successfully")
-
-        serializer = self.get_serializer(queryset, many=True)
-        return api_response(
-            status=status.HTTP_200_OK,
-            success=True,
-            message="Supplier payments for supplier retrieved successfully",
-            data=serializer.data
-        )
+        
