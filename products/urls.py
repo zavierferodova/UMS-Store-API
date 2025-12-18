@@ -1,10 +1,10 @@
 from django.urls import path
 
+from products.views.catalogue import CatalogueViewSet
 from products.views.category import CategoryViewSet
 from products.views.image import ProductImageViewSet
 from products.views.product import ProductViewSet
 from products.views.sku import ProductSKUViewSet
-from products.views.catalogue import CatalogueViewSet
 
 urlpatterns = [
     path('/sku', ProductSKUViewSet.as_view({'get': 'list', 'post': 'create'}), name='sku-list'),

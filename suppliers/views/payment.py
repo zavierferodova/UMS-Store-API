@@ -22,6 +22,12 @@ class SupplierPaymentViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         queryset = SupplierPayment.objects.all()
 
         if self.action == 'list':
+            queryset = queryset.filter(supplier__is_deleted=False)
+
+            supplier_id_param = self.request.query_params.get('supplier_id')
+            if supplier_id_param:
+                queryset = queryset.filter(supplier_id=supplier_id_param)
+
             status_param = self.request.query_params.get('deletion', '').lower()
             if status_param:
                 status_list = [s.strip() for s in status_param.split(',')]
