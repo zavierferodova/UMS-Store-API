@@ -88,11 +88,6 @@ class TransactionViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
     def perform_update(self, serializer):
         pay = serializer.validated_data.get('pay')
         
-        if pay is not None:
-            total = serializer.instance.total
-            if pay < total and pay != 0:
-                 raise ValidationError({"pay": "Pay amount cannot be less than total amount."})
-
         if pay and pay != 0:
             serializer.save(paid_time=timezone.now())
         else:
