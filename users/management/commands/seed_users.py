@@ -20,7 +20,7 @@ class Command(BaseCommand):
             if not User.objects.filter(email=email).exists():
                 User.objects.create_user(
                     email=email,
-                    password='password123',
+                    password=role,
                     username=username,
                     name=name,
                     role=role,

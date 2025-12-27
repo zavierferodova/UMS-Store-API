@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'products',
     'purchase_orders',
     'transactions',
+    'coupons',
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_simplejwt',

@@ -5,6 +5,7 @@ from django.db import models
 
 from products.models.sku import ProductSKU
 from users.models import User
+from coupons.models.coupon_code import CouponCode
 
 
 class Transaction(models.Model):
@@ -50,3 +51,11 @@ class TransactionItem(models.Model):
 
     def __str__(self):
         return f"{self.product_sku} - {self.transaction}"
+
+class TransactionCoupon(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='coupons')
+    coupon_code = models.ForeignKey(CouponCode, on_delete=models.CASCADE, related_name='transactions')
+
+    class Meta:
+        db_table = 'transaction_coupon'

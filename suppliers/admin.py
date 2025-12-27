@@ -11,7 +11,7 @@ class SupplierAdmin(admin.ModelAdmin):
         ('Transaction', {'fields': ('discount', )}),
         ('Additional Information', {'fields': ('created_at', 'updated_at')}),
     )
-    list_display = ('code', 'name', 'address', 'phone', 'email', 'discount', 'created_at', 'updated_at')
+    list_display = ('code', 'name', 'address', 'phone', 'email', 'discount', 'is_deleted', 'created_at', 'updated_at')
     readonly_fields = ('id', 'code', 'created_at', 'updated_at')
     search_fields = ('name', 'email', 'address')
 
