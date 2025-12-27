@@ -1,7 +1,8 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
+
 from coupons.views.coupon import CouponViewSet
-from coupons.views.coupon_code import CouponCodeViewSet 
+from coupons.views.coupon_code import CouponCodeViewSet
 
 router = DefaultRouter()
 

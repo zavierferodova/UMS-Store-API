@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models.coupon import Coupon
 from .models.coupon_code import CouponCode
 
+
 class CouponCodeInline(admin.TabularInline):
     model = CouponCode
     extra = 0

@@ -1,6 +1,9 @@
 import uuid
+
 from django.db import models
+
 from .coupon import Coupon
+
 
 class CouponCode(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

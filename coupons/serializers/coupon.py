@@ -1,6 +1,8 @@
-from rest_framework import serializers
 from django.utils import timezone
+from rest_framework import serializers
+
 from coupons.models.coupon import Coupon
+
 
 class CouponSerializer(serializers.ModelSerializer):
     class Meta:

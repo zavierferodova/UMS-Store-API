@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from coupons.models.coupon_code import CouponCode
+
 from coupons.models.coupon import Coupon
+from coupons.models.coupon_code import CouponCode
+
 
 class CouponCodeSerializer(serializers.ModelSerializer):
     coupon_id = serializers.PrimaryKeyRelatedField(queryset=Coupon.objects.all(), source='coupon')

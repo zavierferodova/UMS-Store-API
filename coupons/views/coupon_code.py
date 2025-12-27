@@ -1,12 +1,14 @@
+from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from django.db.models import Q
+from rest_framework.permissions import IsAuthenticated
+
+from api.pagination import CustomPagination
+from api.utils import api_response
+from authentication.permissions import IsAdmin, IsCashier
 from coupons.models.coupon_code import CouponCode
 from coupons.serializers.coupon_code import CouponCodeSerializer
-from api.utils import api_response
-from api.pagination import CustomPagination
-from authentication.permissions import IsAdmin, IsCashier
-from rest_framework.permissions import IsAuthenticated
+
 
 class CouponCodeViewSet(viewsets.ModelViewSet):
     queryset = CouponCode.objects.all()

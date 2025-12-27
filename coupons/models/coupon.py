@@ -1,5 +1,7 @@
 import uuid
+
 from django.db import models
+
 
 class Coupon(models.Model):
     TYPE_CHOICES = [

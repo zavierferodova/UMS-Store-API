@@ -3,9 +3,9 @@ from datetime import datetime
 
 from django.db import models
 
+from coupons.models.coupon_code import CouponCode
 from products.models.sku import ProductSKU
 from users.models import User
-from coupons.models.coupon_code import CouponCode
 
 
 class Transaction(models.Model):
@@ -59,3 +59,6 @@ class TransactionCoupon(models.Model):
 
     class Meta:
         db_table = 'transaction_coupon'
+
+    def __str__(self):
+        return f"{self.coupon_code} - {self.transaction}"
