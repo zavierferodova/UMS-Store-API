@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -32,11 +33,14 @@ class CouponCodeViewSet(viewsets.ModelViewSet):
         used_count = instance.transactions.count()
         
         can_use = True
+        now = timezone.now()
         if instance.coupon.disabled:
             can_use = False
         elif instance.disabled:
             can_use = False
         elif instance.stock <= used_count:
+            can_use = False
+        elif now < instance.coupon.start_time or now > instance.coupon.end_time:
             can_use = False
         
         data = {
@@ -48,6 +52,9 @@ class CouponCodeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        
+        if 'pk' in self.kwargs:
+            queryset = queryset.filter(coupon_id=self.kwargs['pk'])
         
         # Filter by disabled status
         disabled_param = self.request.query_params.get('disabled')
@@ -79,7 +86,11 @@ class CouponCodeViewSet(viewsets.ModelViewSet):
         return api_response(200, True, "Coupon codes retrieved successfully", serializer.data)
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        data = request.data.copy()
+        if 'pk' in kwargs:
+            data['coupon_id'] = kwargs['pk']
+
+        serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return api_response(201, True, "Coupon code created successfully", serializer.data)

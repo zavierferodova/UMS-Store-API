@@ -29,16 +29,16 @@ class Command(BaseCommand):
         
         # Suppliers (Indonesia)
         suppliers_data = [
-            {"name": "PT Sumber Makmur Jaya", "address": "Jl. Sudirman No. 123, Jakarta Pusat", "phone": "021-5550101", "email": "kontak@sumbermakmur.co.id"},
-            {"name": "CV Abadi Sentosa", "address": "Jl. Tunjungan No. 45, Surabaya", "phone": "031-5550102", "email": "info@abadisentosa.com"},
-            {"name": "PT Teknologi Nusantara", "address": "Jl. Dago No. 88, Bandung", "phone": "022-5550103", "email": "sales@teknus.co.id"},
-            {"name": "UD Berkah Alam", "address": "Jl. Pemuda No. 10, Semarang", "phone": "024-5550104", "email": "support@berkahalam.com"},
-            {"name": "PT Sinar Harapan", "address": "Jl. Gatot Subroto No. 202, Medan", "phone": "061-5550105", "email": "kontak@sinarharapan.co.id"},
-            {"name": "CV Maju Bersama", "address": "Jl. Pantai Losari No. 303, Makassar", "phone": "0411-5550106", "email": "admin@majubersama.com"},
-            {"name": "PT Global Elektronik", "address": "Mangga Dua Mall Lt. 3, Jakarta Utara", "phone": "021-5550107", "email": "sales@globalelektronik.com"},
-            {"name": "UD Tani Sejahtera", "address": "Jl. Ijen No. 404, Malang", "phone": "0341-5550108", "email": "info@tanisejahtera.com"},
-            {"name": "PT Tekstil Indonesia", "address": "Jl. Slamet Riyadi No. 505, Solo", "phone": "0271-5550109", "email": "marketing@tekstilindo.co.id"},
-            {"name": "CV Karya Mandiri", "address": "Jl. Malioboro No. 707, Yogyakarta", "phone": "0274-5550110", "email": "hello@karyamandiri.com"},
+            {"name": "PT Sumber Makmur Jaya", "address": "Jl. Sudirman No. 123, Jakarta Pusat", "phone": "0215550101", "email": "kontak@sumbermakmur.co.id"},
+            {"name": "CV Abadi Sentosa", "address": "Jl. Tunjungan No. 45, Surabaya", "phone": "0315550102", "email": "info@abadisentosa.com"},
+            {"name": "PT Teknologi Nusantara", "address": "Jl. Dago No. 88, Bandung", "phone": "0225550103", "email": "sales@teknus.co.id"},
+            {"name": "UD Berkah Alam", "address": "Jl. Pemuda No. 10, Semarang", "phone": "0245550104", "email": "support@berkahalam.com"},
+            {"name": "PT Sinar Harapan", "address": "Jl. Gatot Subroto No. 202, Medan", "phone": "0615550105", "email": "kontak@sinarharapan.co.id"},
+            {"name": "CV Maju Bersama", "address": "Jl. Pantai Losari No. 303, Makassar", "phone": "04115550106", "email": "admin@majubersama.com"},
+            {"name": "PT Global Elektronik", "address": "Mangga Dua Mall Lt. 3, Jakarta Utara", "phone": "0215550107", "email": "sales@globalelektronik.com"},
+            {"name": "UD Tani Sejahtera", "address": "Jl. Ijen No. 404, Malang", "phone": "03415550108", "email": "info@tanisejahtera.com"},
+            {"name": "PT Tekstil Indonesia", "address": "Jl. Slamet Riyadi No. 505, Solo", "phone": "02715550109", "email": "marketing@tekstilindo.co.id"},
+            {"name": "CV Karya Mandiri", "address": "Jl. Malioboro No. 707, Yogyakarta", "phone": "02745550110", "email": "hello@karyamandiri.com"},
         ]
         
         for data in suppliers_data:
@@ -86,13 +86,11 @@ class Command(BaseCommand):
             
             # Create SKU for the product
             if not ProductSKU.objects.filter(product=product).exists():
-                # Generate SKU like "SKU-PON-123"
-                prefix = product.name[:3].upper().replace(" ", "")
-                sku_code = f"SKU-{prefix}-{random.randint(100, 999)}"
+                sku_code = f"{random.randint(100000000000, 999999999999)}"
                 
                 # Ensure uniqueness
                 while ProductSKU.objects.filter(sku=sku_code).exists():
-                    sku_code = f"SKU-{prefix}-{random.randint(100, 999)}"
+                    sku_code = f"{random.randint(100000000000, 999999999999)}"
                 
                 ProductSKU.objects.create(
                     product=product,
