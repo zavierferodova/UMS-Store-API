@@ -8,6 +8,7 @@ from api.pagination import CustomPagination
 from api.utils import api_response
 from authentication.permissions import IsAdmin, IsCashier
 from coupons.models.coupon_code import CouponCode
+from coupons.serializers.coupon import CouponSerializer
 from coupons.serializers.coupon_code import CouponCodeSerializer
 
 
@@ -30,7 +31,6 @@ class CouponCodeViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'], url_path='usage')
     def check_usage(self, request, code=None):
         instance = self.get_object()
-        used_count = instance.transactions.count()
         
         can_use = True
         now = timezone.now()
@@ -38,16 +38,18 @@ class CouponCodeViewSet(viewsets.ModelViewSet):
             can_use = False
         elif instance.disabled:
             can_use = False
-        elif instance.stock <= used_count:
+        elif instance.stock <= instance.used:
             can_use = False
         elif now < instance.coupon.start_time or now > instance.coupon.end_time:
             can_use = False
         
-        data = {
-            "code": instance.code,
-            "stock": instance.stock,
-            "can_use": can_use
-        }
+        coupon_serializer = CouponSerializer(instance.coupon)
+        code_serializer = self.get_serializer(instance)
+        
+        data = coupon_serializer.data
+        data['code'] = code_serializer.data
+        data['code']['can_use'] = can_use
+
         return api_response(200, True, "Check usage success", data)
 
     def get_queryset(self):

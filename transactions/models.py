@@ -56,9 +56,10 @@ class TransactionCoupon(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='coupons')
     coupon_code = models.ForeignKey(CouponCode, on_delete=models.CASCADE, related_name='transactions')
+    amount = models.IntegerField(default=1)
 
     class Meta:
-        db_table = 'transaction_coupon'
+        db_table = 'transaction_coupons'
 
     def __str__(self):
         return f"{self.coupon_code} - {self.transaction}"

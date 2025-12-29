@@ -71,15 +71,7 @@ class TransactionViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         return TransactionSerializer
 
     def perform_create(self, serializer):
-        items = serializer.validated_data.get('items', [])
-        sub_total = sum(item.get('unit_price') * item.get('amount') for item in items)
-        discount_total = serializer.validated_data.get('discount_total') or 0
-        total = max(0, sub_total - discount_total)
-
         pay = serializer.validated_data.get('pay')
-        if pay and pay < total:
-            raise ValidationError({"pay": "Pay amount cannot be less than total amount."})
-
         if pay and pay != 0:
             serializer.save(paid_time=timezone.now())
         else:

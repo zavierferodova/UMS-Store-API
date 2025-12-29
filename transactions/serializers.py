@@ -1,10 +1,35 @@
 from django.db import transaction
+from django.utils import timezone
 from rest_framework import serializers
 
+from coupons.models.coupon_code import CouponCode
+from coupons.serializers.coupon_code import CouponCodeSerializer
 from products.models.sku import ProductSKU
 from users.serializers import UserSerializer
 
-from .models import Transaction, TransactionItem
+from .models import Transaction, TransactionItem, TransactionCoupon
+
+
+class TransactionCouponOutputSerializer(serializers.ModelSerializer):
+    code = CouponCodeSerializer(source='coupon_code')
+    id = serializers.UUIDField(source='coupon_code.coupon.id')
+    name = serializers.CharField(source='coupon_code.coupon.name')
+    type = serializers.CharField(source='coupon_code.coupon.type')
+    voucher_value = serializers.IntegerField(source='coupon_code.coupon.voucher_value')
+    discount_percentage = serializers.IntegerField(source='coupon_code.coupon.discount_percentage')
+    start_time = serializers.DateTimeField(source='coupon_code.coupon.start_time')
+    end_time = serializers.DateTimeField(source='coupon_code.coupon.end_time')
+    disabled = serializers.BooleanField(source='coupon_code.coupon.disabled')
+    created_at = serializers.DateTimeField(source='coupon_code.coupon.created_at')
+    updated_at = serializers.DateTimeField(source='coupon_code.coupon.updated_at')
+
+    class Meta:
+        model = TransactionCoupon
+        fields = [
+            'id', 'name', 'type', 'voucher_value', 'discount_percentage',
+            'start_time', 'end_time', 'disabled', 'created_at', 'updated_at',
+            'code'
+        ]
 
 
 class TransactionItemSerializer(serializers.ModelSerializer):
@@ -23,13 +48,15 @@ class TransactionItemSerializer(serializers.ModelSerializer):
 
 class TransactionUpdateSerializer(serializers.ModelSerializer):
     items = TransactionItemSerializer(many=True, required=False)
+    coupons = TransactionCouponOutputSerializer(many=True, read_only=True)
 
     class Meta:
         model = Transaction
-        fields = ['pay', 'is_saved', 'items', 'discount_total', 'payment', 'note']
+        fields = ['pay', 'is_saved', 'items', 'discount_total', 'payment', 'note', 'coupons']
 
     def update(self, instance, validated_data):
         items_data = validated_data.pop('items', None)
+        coupons_data = self.initial_data.get('coupons', None)
         
         with transaction.atomic():
             if items_data is not None:
@@ -73,11 +100,61 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
                         product_sku_instance.stock -= amount
                         product_sku_instance.save()
             
+            if coupons_data is not None:
+                old_coupons = {c.coupon_code.code: c for c in instance.coupons.select_related('coupon_code').all()}
+                new_coupons_codes = set(c.get('code') for c in coupons_data)
+                
+                # Delete removed coupons
+                for code, old_coupon in old_coupons.items():
+                    if code not in new_coupons_codes:
+                        old_coupon.coupon_code.used -= old_coupon.amount
+                        old_coupon.coupon_code.save()
+                        old_coupon.delete()
+                
+                # Add/Update coupons
+                for coupon_data in coupons_data:
+                    code = coupon_data.get('code')
+                    amount = coupon_data.get('amounts')
+                    
+                    if code in old_coupons:
+                        old_coupon = old_coupons[code]
+                        diff = amount - old_coupon.amount
+                        if diff != 0:
+                            if diff > 0:
+                                if old_coupon.coupon_code.stock < (old_coupon.coupon_code.used + diff):
+                                     raise serializers.ValidationError(f"Coupon {code} out of stock.")
+                            
+                            old_coupon.coupon_code.used += diff
+                            old_coupon.coupon_code.save()
+                            old_coupon.amount = amount
+                            old_coupon.save()
+                    else:
+                        try:
+                            coupon_code_instance = CouponCode.objects.get(code=code)
+                            if coupon_code_instance.disabled:
+                                raise serializers.ValidationError(f"Coupon {code} is disabled.")
+                            if coupon_code_instance.stock < (coupon_code_instance.used + amount):
+                                raise serializers.ValidationError(f"Coupon {code} out of stock.")
+                            
+                            now = timezone.now()
+                            if coupon_code_instance.coupon.start_time > now or coupon_code_instance.coupon.end_time < now:
+                                raise serializers.ValidationError(f"Coupon {code} is not valid at this time.")
+
+                            TransactionCoupon.objects.create(
+                                transaction=instance,
+                                coupon_code=coupon_code_instance,
+                                amount=amount
+                            )
+                            coupon_code_instance.used += amount
+                            coupon_code_instance.save()
+                        except CouponCode.DoesNotExist:
+                             raise serializers.ValidationError(f"Coupon code {code} not found.")
+            
             # Update other fields
             instance = super().update(instance, validated_data)
             
-            # Recalculate totals if items changed or discount_total changed
-            if items_data is not None or 'discount_total' in validated_data:
+            # Recalculate totals if items changed or coupons changed
+            if items_data is not None or coupons_data is not None:
                 if items_data is not None:
                     current_items = instance.items.all()
                     sub_total = sum(item.unit_price * item.amount for item in current_items)
@@ -85,25 +162,50 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
                 else:
                     sub_total = instance.sub_total
                 
-                discount_total = instance.discount_total or 0
-                instance.total = max(0, sub_total - discount_total)
+                # Calculate discount from current coupons in DB
+                current_coupons = instance.coupons.select_related('coupon_code__coupon').all()
+                voucher_discount = 0
+                percentage_discount = 0
+                percentage_coupon_count = 0
+
+                for transaction_coupon in current_coupons:
+                    coupon = transaction_coupon.coupon_code.coupon
+                    amount = transaction_coupon.amount
+                    
+                    if coupon.type == 'discount':
+                        percentage_coupon_count += 1
+                        if percentage_coupon_count > 1:
+                            raise serializers.ValidationError("Only one percentage discount coupon is allowed.")
+                        if amount > 1:
+                            raise serializers.ValidationError("Percentage discount coupon amount cannot be more than 1.")
+                        
+                        percentage_discount += (sub_total * coupon.discount_percentage / 100)
+                    elif coupon.type == 'voucher':
+                        voucher_discount += (coupon.voucher_value * amount)
+                
+                instance.discount_total = int(voucher_discount + percentage_discount)
+                instance.total = max(0, sub_total - instance.discount_total)
                 instance.save()
             
             if instance.pay and instance.pay != 0:
                 if instance.pay < instance.total:
+                     print("CALLED")
+                     print(instance.pay)
+                     print(instance.total)
                      raise serializers.ValidationError({"pay": "Pay amount cannot be less than total amount."})
                      
         return instance
 
 class TransactionSerializer(serializers.ModelSerializer):
     items = TransactionItemSerializer(many=True)
+    coupons = TransactionCouponOutputSerializer(many=True, read_only=True)
 
     class Meta:
         model = Transaction
         fields = [
             'id', 'code', 'cashier', 'pay', 'sub_total',
             'discount_total', 'total', 'payment', 'note',
-            'is_saved', 'paid_time', 'created_at', 'updated_at', 'items'
+            'is_saved', 'paid_time', 'created_at', 'updated_at', 'items', 'coupons'
         ]
         read_only_fields = ['id', 'sub_total', 'total', 'created_at', 'updated_at', 'paid_time']
 
@@ -114,6 +216,7 @@ class TransactionSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
+        coupons_data = self.initial_data.get('coupons', [])
         
         calculated_sub_total = 0
         items_to_create = []
@@ -136,10 +239,52 @@ class TransactionSerializer(serializers.ModelSerializer):
             
         validated_data['sub_total'] = calculated_sub_total
         
-        # Calculate total (sub_total - discount_total)
-        discount = validated_data.get('discount_total') or 0
-        validated_data['total'] = max(0, calculated_sub_total - discount)
+        # Validate coupons and calculate discount
+        voucher_discount = 0
+        percentage_discount = 0
+        percentage_coupon_count = 0
         
+        valid_coupons = []
+        for coupon_data in coupons_data:
+            code = coupon_data.get('code')
+            amount = coupon_data.get('amounts')
+            try:
+                coupon_code_instance = CouponCode.objects.select_related('coupon').get(code=code)
+                if coupon_code_instance.disabled:
+                     raise serializers.ValidationError(f"Coupon {code} is disabled.")
+                if coupon_code_instance.stock < (coupon_code_instance.used + amount):
+                     raise serializers.ValidationError(f"Coupon {code} out of stock.")
+                
+                now = timezone.now()
+                if coupon_code_instance.coupon.start_time > now or coupon_code_instance.coupon.end_time < now:
+                     raise serializers.ValidationError(f"Coupon {code} is not valid at this time.")
+                
+                if coupon_code_instance.coupon.type == 'discount':
+                    percentage_coupon_count += 1
+                    if percentage_coupon_count > 1:
+                        raise serializers.ValidationError("Only one percentage discount coupon is allowed.")
+                    if amount > 1:
+                        raise serializers.ValidationError("Percentage discount coupon amount cannot be more than 1.")
+                    
+                    percentage_discount += (calculated_sub_total * coupon_code_instance.coupon.discount_percentage / 100)
+                elif coupon_code_instance.coupon.type == 'voucher':
+                    voucher_discount += (coupon_code_instance.coupon.voucher_value * amount)
+
+                valid_coupons.append({
+                    'coupon_code': coupon_code_instance,
+                    'amount': amount
+                })
+            except CouponCode.DoesNotExist:
+                raise serializers.ValidationError(f"Coupon code {code} not found.")
+
+        total_discount = int(voucher_discount + percentage_discount)
+        validated_data['discount_total'] = total_discount
+        validated_data['total'] = max(0, calculated_sub_total - total_discount)
+
+        pay = validated_data.get('pay')
+        if pay and pay < validated_data['total']:
+             raise serializers.ValidationError({"pay": "Pay amount cannot be less than total amount."})
+
         with transaction.atomic():
             # Create transaction
             transaction_instance = Transaction.objects.create(**validated_data)
@@ -154,5 +299,15 @@ class TransactionSerializer(serializers.ModelSerializer):
                 product_sku_instance = item['product_sku']
                 product_sku_instance.stock -= item['amount']
                 product_sku_instance.save()
+            
+            # Create transaction coupons
+            for coupon_item in valid_coupons:
+                TransactionCoupon.objects.create(
+                    transaction=transaction_instance,
+                    coupon_code=coupon_item['coupon_code'],
+                    amount=coupon_item['amount']
+                )
+                coupon_item['coupon_code'].used += coupon_item['amount']
+                coupon_item['coupon_code'].save()
                 
         return transaction_instance
