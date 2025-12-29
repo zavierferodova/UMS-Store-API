@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import json
 from datetime import timedelta
 from pathlib import Path
 
@@ -70,9 +71,9 @@ STORAGES = {
         "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
         "OPTIONS": {
           "bucket_name": "store-ums-storage",
-          "credentials": service_account.Credentials.from_service_account_file(
-            os.path.join(BASE_DIR, 'gcs-key.json')
-          ),
+          "credentials": service_account.Credentials.from_service_account_info(
+            json.loads(os.environ.get('GCS_KEY_JSON'))
+          ) if os.environ.get('GCS_KEY_JSON') else None,
         },
     },
     "staticfiles": {
