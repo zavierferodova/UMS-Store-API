@@ -42,23 +42,15 @@ def show_help() -> None:
     """Display help message."""
     color_print("Usage: python run.py [command]", 'YELLOW')
     print("\nAvailable commands:")
-    print("  runserver      - Start the development server")
     print("  lint           - Run linter")
     print("  lint-fix       - Fix linting issues")
     print("  install        - Install dependencies")
-    print("  makemigrations - Make migrations")
-    print("  migrate        - Migrate database")
     print("  setup          - Setup the project")
     print("  help           - Show this help message")
 
 def setup_project() -> int:
     """Set up the project (replaces setup.sh)."""
     color_print("Setting up the project...", 'YELLOW')
-    
-    # Install dependencies
-    color_print("Installing dependencies...", 'YELLOW')
-    if run_command(["poetry", "install"]) != 0:
-        return 1
     
     # Run database migrations
     color_print("Running database migrations...", 'YELLOW')
@@ -81,18 +73,10 @@ def main() -> int:
 
     command = sys.argv[1].lower()
     
-    if command == 'runserver':
-        return run_command(["poetry", "run", "python", "manage.py", "runserver"])
-    elif command == 'lint':
+    if command == 'lint':
         return run_command(["poetry", "run", "ruff", "check", "."])
     elif command == 'lint-fix':
         return run_command(["poetry", "run", "ruff", "check", ".", "--fix"])
-    elif command == 'install':
-        return run_command(["poetry", "install"])
-    elif command == 'makemigrations':
-        return run_command(["poetry", "run", "python", "manage.py", "makemigrations"])
-    elif command == 'migrate':
-        return run_command(["poetry", "run", "python", "manage.py", "migrate"])
     elif command == 'setup':
         return setup_project()
     elif command in ('help', '--help', '-h'):
