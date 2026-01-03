@@ -40,6 +40,7 @@ class TransactionItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = TransactionItem
         fields = ['product_sku', 'name', 'sku_code', 'unit_price', 'amount']
+        read_only_fields = ['unit_price']
 
     def validate_product_sku(self, value):
         if not ProductSKU.objects.filter(sku=value).exists():
@@ -61,7 +62,7 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
         with transaction.atomic():
             if items_data is not None:
                 # 1. Retrieve all of old items from database
-                old_items = {item.product_sku.sku: item for item in instance.items.select_related('product_sku').all()}
+                old_items = {item.product_sku.sku: item for item in instance.items.select_related('product_sku__product').all()}
                 new_items_skus = set(item['product_sku'] for item in items_data)
                 
                 # 2. If the item is not inputed on new payload delete it, and append stock to related product sku item.
@@ -75,7 +76,6 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
                 for item_data in items_data:
                     sku_code = item_data['product_sku']
                     amount = item_data['amount']
-                    unit_price = item_data['unit_price']
                     
                     if sku_code in old_items:
                         old_item = old_items[sku_code]
@@ -86,15 +86,15 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
                             old_item.product_sku.save()
                         
                         old_item.amount = amount
-                        old_item.unit_price = unit_price
+                        old_item.unit_price = old_item.product_sku.product.price
                         old_item.save()
                     else:
                         # Add new item
-                        product_sku_instance = ProductSKU.objects.get(sku=sku_code)
+                        product_sku_instance = ProductSKU.objects.select_related('product').get(sku=sku_code)
                         TransactionItem.objects.create(
                             transaction=instance,
                             product_sku=product_sku_instance,
-                            unit_price=unit_price,
+                            unit_price=product_sku_instance.product.price,
                             amount=amount
                         )
                         product_sku_instance.stock -= amount
@@ -225,7 +225,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             sku_code = item_data.pop('product_sku')
             product_sku_instance = ProductSKU.objects.select_related('product').get(sku=sku_code)
-            price = item_data['unit_price']
+            price = product_sku_instance.product.price
             amount = item_data['amount']
             
             item_total = price * amount
