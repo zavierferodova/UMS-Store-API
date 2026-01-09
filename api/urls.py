@@ -9,4 +9,5 @@ urlpatterns = [
     path('/transactions', include('transactions.urls')),
     path('/store', include('store.urls')),
     path('/coupons', include('coupons.urls')),
+    path('/cashier-books', include('cashier_books.urls')),
 ]

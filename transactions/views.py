@@ -1,7 +1,6 @@
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import permissions, status, viewsets
-from rest_framework.exceptions import ValidationError
 
 from api.mixins import CustomPaginationMixin
 from api.pagination import CustomPagination
@@ -22,10 +21,13 @@ class TransactionViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         queryset = Transaction.objects.all().order_by('-updated_at')
         user = self.request.user
 
-        if user.role == 'admin':
-            queryset = queryset.filter(is_saved=False)
-        elif user.role == 'cashier':
-            queryset = queryset.filter(cashier=user)
+        if getattr(user, 'role', None) == 'admin':
+            queryset = queryset.filter(
+                Q(is_saved=False) |
+                Q(cashier_book_transactions__cashier_book__cashier=user)
+            ).distinct()
+        elif getattr(user, 'role', None) == 'cashier':
+            queryset = queryset.filter(cashier_book_transactions__cashier_book__cashier=user)
         
         if self.action == 'list':
             search = self.request.query_params.get('search')
@@ -41,7 +43,7 @@ class TransactionViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                 )
 
             if cashier_id:
-                queryset = queryset.filter(cashier_id=cashier_id)
+                queryset = queryset.filter(cashier_book_transactions__cashier_book__cashier_id=cashier_id)
 
             if start_date:
                 queryset = queryset.filter(created_at__date__gte=start_date)

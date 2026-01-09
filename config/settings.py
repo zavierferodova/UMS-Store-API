@@ -10,8 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-import os
 import json
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'suppliers',
     'products',
     'purchase_orders',
+    'cashier_books',
     'transactions',
     'coupons',
     'rest_framework',

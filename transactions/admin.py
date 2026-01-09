@@ -13,9 +13,9 @@ class TransactionCouponInline(admin.TabularInline):
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('code', 'cashier', 'total', 'payment', 'created_at')
-    list_filter = ('payment', 'created_at', 'cashier')
-    search_fields = ('code', 'cashier__username', 'note')
+    list_display = ('code', 'total', 'payment', 'created_at')
+    list_filter = ('payment', 'created_at')
+    search_fields = ('code', 'note')
     inlines = [TransactionItemInline, TransactionCouponInline]
     readonly_fields = ('code', 'created_at', 'updated_at')
 

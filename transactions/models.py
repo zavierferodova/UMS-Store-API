@@ -3,9 +3,9 @@ from datetime import datetime
 
 from django.db import models
 
+from cashier_books.models import CashierBook
 from coupons.models.coupon_code import CouponCode
 from products.models.sku import ProductSKU
-from users.models import User
 
 
 class Transaction(models.Model):
@@ -16,7 +16,6 @@ class Transaction(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     code = models.CharField(max_length=20, editable=False, unique=True)
-    cashier = models.ForeignKey(User, on_delete=models.PROTECT, related_name='transactions')
     pay = models.BigIntegerField(null=True, blank=True)
     sub_total = models.BigIntegerField()
     discount_total = models.BigIntegerField(null=True, blank=True)
@@ -56,6 +55,8 @@ class TransactionCoupon(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='coupons')
     coupon_code = models.ForeignKey(CouponCode, on_delete=models.CASCADE, related_name='transactions')
+    item_discount_value = models.BigIntegerField(null=True, blank=True)
+    item_voucher_value = models.BigIntegerField(null=True, blank=True)
     amount = models.IntegerField(default=1)
 
     class Meta:
@@ -63,3 +64,15 @@ class TransactionCoupon(models.Model):
 
     def __str__(self):
         return f"{self.coupon_code} - {self.transaction}"
+
+
+class TransactionCashierBooks(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    cashier_book = models.ForeignKey(CashierBook, on_delete=models.CASCADE, related_name='transactions')
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='cashier_book_transactions')
+
+    class Meta:
+        db_table = 'transaction_cashier_books'
+
+    def __str__(self):
+        return f"{self.transaction} - {self.cashier_book_id}"
