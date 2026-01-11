@@ -6,9 +6,8 @@ from api.mixins import CustomPaginationMixin
 from api.pagination import CustomPagination
 from api.utils import api_response
 from authentication.permissions import IsAdmin, IsCashier
-
-from .models import Transaction
-from .serializers import TransactionSerializer, TransactionUpdateSerializer
+from transactions.models.transaction import Transaction
+from transactions.serializers.transaction import TransactionSerializer, TransactionUpdateSerializer
 
 
 class TransactionViewSet(CustomPaginationMixin, viewsets.ModelViewSet):

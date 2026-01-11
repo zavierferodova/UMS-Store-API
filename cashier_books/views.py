@@ -9,8 +9,9 @@ from api.mixins import CustomPaginationMixin
 from api.pagination import CustomPagination
 from api.utils import api_response
 from authentication.permissions import IsAdmin, IsCashier
-from transactions.models import Transaction, TransactionCoupon
-from transactions.serializers import TransactionSerializer
+from transactions.models.transaction import Transaction
+from transactions.models.transaction_coupon import TransactionCoupon
+from transactions.serializers.transaction import TransactionSerializer
 
 from .models import CashierBook
 from .serializers import CashierBookSerializer

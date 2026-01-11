@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from .models import Transaction, TransactionCoupon, TransactionItem
+from transactions.models.transaction import Transaction
+from transactions.models.transaction_coupon import TransactionCoupon
+from transactions.models.transaction_item import TransactionItem
 
 
 class TransactionItemInline(admin.TabularInline):
