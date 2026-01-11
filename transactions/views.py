@@ -7,7 +7,9 @@ from api.pagination import CustomPagination
 from api.utils import api_response
 from authentication.permissions import IsAdmin, IsCashier
 from transactions.models.transaction import Transaction
+from transactions.models.transaction_item import TransactionItem
 from transactions.serializers.transaction import TransactionSerializer, TransactionUpdateSerializer
+from transactions.serializers.transaction_item import SupplierTransactionItemSerializer
 
 
 class TransactionViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
@@ -130,3 +132,41 @@ class TransactionViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
             message="Transaction updated successfully",
             data=serializer.data
         )
+
+    def supplier_products(self, request, supplier_id=None):
+        user = request.user
+        if getattr(user, 'role', None) != 'admin':
+             return api_response(status=status.HTTP_403_FORBIDDEN, success=False, message="You do not have permission to access this resource.")
+        
+        if not supplier_id:
+            return api_response(status=status.HTTP_400_BAD_REQUEST, success=False, message="Supplier ID is required.")
+
+        queryset = TransactionItem.objects.filter(product_sku__supplier_id=supplier_id).select_related('transaction', 'product_sku__product', 'product_sku__product__category').order_by('-transaction__created_at')
+
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+        if start_date:
+            queryset = queryset.filter(transaction__paid_time__date__gte=start_date)
+        if end_date:
+            queryset = queryset.filter(transaction__paid_time__date__lte=end_date)
+            
+        search = request.query_params.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(product_sku__product__name__icontains=search) |
+                Q(product_sku__sku__icontains=search) |
+                Q(transaction__code__icontains=search)
+            )
+            
+        categories = request.query_params.get('categories')
+        if categories:
+            category_list = [c.strip() for c in categories.split(',')]
+            queryset = queryset.filter(product_sku__product__category__id__in=category_list)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = SupplierTransactionItemSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data, message="Supplier products transactions retrieved successfully")
+
+        serializer = SupplierTransactionItemSerializer(queryset, many=True)
+        return api_response(status=status.HTTP_200_OK, success=True, message="Supplier products transactions retrieved successfully", data=serializer.data)
