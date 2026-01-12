@@ -150,14 +150,6 @@ class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
 
-            # Check for status transition to APPROVED
-            if old_status != PurchaseOrder.Status.APPROVED and instance.status == PurchaseOrder.Status.APPROVED:
-                # Update stock
-                for item in instance.items.all():
-                    sku = item.product_sku
-                    sku.stock += item.amounts
-                    sku.save()
-
             return api_response(
                 status=status.HTTP_200_OK,
                 success=True,

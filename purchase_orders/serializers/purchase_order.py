@@ -58,6 +58,31 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         data['items'] = PoItemSerializer(instance.items.all(), many=True).data
         return data
 
+    def update(self, instance, validated_data):
+        old_status = instance.status
+        purchase_order = super().update(instance, validated_data)
+
+        if old_status != PurchaseOrder.Status.APPROVED and purchase_order.status == PurchaseOrder.Status.APPROVED:
+            for item in purchase_order.items.all():
+                product_sku = item.product_sku
+                product = product_sku.product
+                
+                current_price = product.price
+                new_price = item.price
+                stock = product_sku.stock
+
+                if stock <= 0:
+                    product.price = new_price
+                    product.save()
+                elif current_price < new_price:
+                    product.price = new_price
+                    product.save()
+
+                product_sku.stock += item.amounts
+                product_sku.save()
+
+        return purchase_order
+
     def create(self, validated_data):
         items_data = validated_data.pop('items', [])
         purchase_order = super().create(validated_data)
