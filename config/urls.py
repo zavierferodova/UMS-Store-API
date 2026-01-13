@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.conf import settings
 
 from api.views import HomePageView
 
@@ -23,6 +24,4 @@ urlpatterns = [
     path('', HomePageView.as_view(), name='home'),
     path('admin/', admin.site.urls),
     path('api', include('api.urls')),
-    path('purchase-orders/', include('purchase_orders.urls'))
-    ,path('store/', include('store.urls'))
 ]
