@@ -12,6 +12,6 @@ class PurchaseOrderAdmin(admin.ModelAdmin):
 
 @admin.register(PoItem)
 class PoItemAdmin(admin.ModelAdmin):
-    list_display = ("id", "purchase_order", "product_sku", "price", "amounts", "remain_stock", "supplier_discount")
+    list_display = ("id", "purchase_order", "product_sku", "price", "amounts", "supplier_discount")
     list_filter = ("purchase_order", "product_sku")
     search_fields = ("id", "purchase_order__code", "product_sku__sku")

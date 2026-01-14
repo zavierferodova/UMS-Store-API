@@ -59,8 +59,20 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         return data
 
     def update(self, instance, validated_data):
+        items_data = validated_data.pop('items', None)
         old_status = instance.status
         purchase_order = super().update(instance, validated_data)
+
+        if items_data is not None:
+            if purchase_order.status not in [PurchaseOrder.Status.DRAFT, PurchaseOrder.Status.WAITING_APPROVAL]:
+                raise serializers.ValidationError(
+                    "Items can only be updated if status is draft or rejected"
+                )
+
+            purchase_order.items.all().delete()
+            for item_data in items_data:
+                item_data['purchase_order'] = purchase_order
+                NestedPoItemSerializer().create(item_data)
 
         if old_status != PurchaseOrder.Status.APPROVED and purchase_order.status == PurchaseOrder.Status.APPROVED:
             for item in purchase_order.items.all():

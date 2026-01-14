@@ -119,8 +119,8 @@ class TransactionSerializer(serializers.ModelSerializer):
         percentage_discount = 0
         valid_coupons = []
         
-        # Only process coupons if transaction is paid and not saved
-        if validated_data.get('paid_time') is not None and not validated_data.get('is_saved', False):
+        # Only process coupons if transaction is not saved
+        if not validated_data.get('is_saved', False):
             valid_coupons_info = []
             for coupon_data in coupons_data:
                 code = coupon_data.get('code')
@@ -152,9 +152,17 @@ class TransactionSerializer(serializers.ModelSerializer):
         validated_data['discount_total'] = total_discount
         validated_data['total'] = max(0, calculated_sub_total - total_discount)
 
+        if validated_data['total'] == 0 and not validated_data.get('is_saved', False):
+             validated_data['pay'] = 0
+             validated_data['paid_time'] = timezone.now()
+
         pay = validated_data.get('pay')
-        if pay and pay < validated_data['total']:
+        if pay is not None and pay < validated_data['total']:
              raise serializers.ValidationError({"pay": "Pay amount cannot be less than total amount."})
+
+        # If pay is provided and sufficient, we consider it paid.
+        if pay is not None and pay >= validated_data['total'] and not validated_data.get('is_saved', False):
+             validated_data['paid_time'] = timezone.now()
 
         with transaction.atomic():
             # Create transaction
@@ -338,8 +346,18 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
                 instance.total = max(0, sub_total - instance.discount_total)
                 instance.save()
             
-            if instance.pay and instance.pay != 0:
+            if instance.pay is not None:
                 if instance.pay < instance.total:
                      raise serializers.ValidationError({"pay": "Pay amount cannot be less than total amount."})
+                
+            if instance.total == 0 and not instance.is_saved:
+                instance.pay = 0
+                if not instance.paid_time:
+                    instance.paid_time = timezone.now()
+                    instance.save()
+                    # Reduce stock since it's now paid
+                    for item in instance.items.all():
+                        item.product_sku.stock -= item.amount
+                        item.product_sku.save()
                      
         return instance

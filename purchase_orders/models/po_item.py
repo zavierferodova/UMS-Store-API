@@ -8,11 +8,6 @@ from purchase_orders.models.purchase_order import PurchaseOrder
 
 
 class PoItem(models.Model):
-    class ReturnStatus(models.TextChoices):
-        NONE = "none", "None"
-        PARTIAL = "partial", "Partial"
-        COMPLETED = "completed", "Completed"
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     purchase_order = models.ForeignKey(
         PurchaseOrder, on_delete=models.CASCADE, related_name="items"
@@ -21,12 +16,6 @@ class PoItem(models.Model):
     price = models.BigIntegerField()
     amounts = models.IntegerField()
     supplier_discount = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
-    remain_stock = models.IntegerField(blank=True, null=True)
-    return_status = models.CharField(
-        max_length=20,
-        choices=ReturnStatus.choices,
-        default=ReturnStatus.NONE,
-    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

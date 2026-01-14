@@ -149,12 +149,12 @@ class CashierBookViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
 
         cash_stats = transactions.filter(payment='cash').aggregate(
             cnt=Count('id'),
-            val=Coalesce(Sum(F('total') - Coalesce(F('discount_total'), 0)), 0, output_field=BigIntegerField())
+            val=Coalesce(Sum(F('total')), 0, output_field=BigIntegerField())
         )
 
         cashless_stats = transactions.filter(payment='cashless').aggregate(
             cnt=Count('id'),
-            val=Coalesce(Sum(F('total') - Coalesce(F('discount_total'), 0)), 0, output_field=BigIntegerField())
+            val=Coalesce(Sum(F('total')), 0, output_field=BigIntegerField())
         )
 
         voucher_stats = TransactionCoupon.objects.filter(
@@ -218,12 +218,12 @@ class CashierBookViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
 
         cash_stats = transactions.filter(payment='cash').aggregate(
             cnt=Count('id'),
-            val=Coalesce(Sum(F('total') - Coalesce(F('discount_total'), 0)), 0, output_field=BigIntegerField())
+            val=Coalesce(Sum(F('total')), 0, output_field=BigIntegerField())
         )
 
         cashless_stats = transactions.filter(payment='cashless').aggregate(
             cnt=Count('id'),
-            val=Coalesce(Sum(F('total') - Coalesce(F('discount_total'), 0)), 0, output_field=BigIntegerField())
+            val=Coalesce(Sum(F('total')), 0, output_field=BigIntegerField())
         )
 
         voucher_stats = TransactionCoupon.objects.filter(

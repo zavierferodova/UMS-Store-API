@@ -3,7 +3,8 @@ __pycache__/
 .ruff_cache/
 
 # Environment variables
-.env
+.env*
+!.env.example
 
 # Google Cloud Storage
 gcs-key.json
