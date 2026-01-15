@@ -2,6 +2,7 @@ services:
   web:
     build: .
     command: sh /app/entrypoint.sh
+    restart: always
     ports:
       - "8000:8000"
     extra_hosts:
