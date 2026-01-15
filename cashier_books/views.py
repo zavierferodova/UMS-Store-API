@@ -176,7 +176,7 @@ class CashierBookViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         data = {
             "cash": {
                 "count": cash_stats['cnt'],
-                "value": cash_stats['val']
+                "value": cash_stats['val'] + active_book.cash_drawer
             },
             "cashless": {
                 "count": cashless_stats['cnt'],
@@ -245,7 +245,7 @@ class CashierBookViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         data = {
             "cash": {
                 "count": cash_stats['cnt'],
-                "value": cash_stats['val']
+                "value": cash_stats['val'] + book.cash_drawer
             },
             "cashless": {
                 "count": cashless_stats['cnt'],

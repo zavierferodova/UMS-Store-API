@@ -2,35 +2,26 @@ from rest_framework import serializers
 
 from products.models.product import Product
 from products.models.sku import ProductSKU
+from suppliers.models.supplier import Supplier
 from suppliers.serializers.supplier import SupplierSerializer
 
 
 class ProductSKUSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductSKU
-        fields = ['id', 'sku', 'stock', 'supplier']
-        read_only_fields = ['id']
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        if instance.supplier:
-            representation['supplier'] = SupplierSerializer(instance.supplier).data
-        return representation
-
-    def validate_stock(self, value):
-        if value < 0:
-            raise serializers.ValidationError("Stock cannot be negative.")
-        return value
-
-class ProductSKUCreateSerializer(serializers.ModelSerializer):
     product_id = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(),
         source='product'
     )
+    supplier_id = serializers.PrimaryKeyRelatedField(
+        queryset=Supplier.objects.all(),
+        source='supplier',
+        required=False,
+        write_only=True,
+        allow_null=True
+    )
 
     class Meta:
         model = ProductSKU
-        fields = ['id', 'sku', 'stock', 'product_id', 'supplier']
+        fields = ['id', 'sku', 'stock', 'supplier', 'supplier_id', 'product_id', 'payment_option', 'partnership_discount']
         read_only_fields = ['id']
 
     def to_representation(self, instance):
@@ -43,7 +34,6 @@ class ProductSKUCreateSerializer(serializers.ModelSerializer):
         if value < 0:
             raise serializers.ValidationError("Stock cannot be negative.")
         return value
-
 
 class ProductSKUListSerializer(serializers.ModelSerializer):
     """

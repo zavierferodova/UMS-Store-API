@@ -50,6 +50,7 @@ class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         if search_query:
             queryset = queryset.filter(
                 models.Q(code__icontains=search_query) |
+                models.Q(name__icontains=search_query) |
                 models.Q(requester__name__icontains=search_query) |
                 models.Q(approver__name__icontains=search_query) |
                 models.Q(supplier__name__icontains=search_query)
@@ -68,19 +69,19 @@ class PurchaseOrderViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
             if status_query_filter:
                 queryset = queryset.filter(status_query_filter)
                 
-        # Handle payout filter parameter (comma-separated values: cash,partnership)
-        payout_param = request.query_params.get('payout', '').lower()
-        if payout_param:
-            payout_values = [v.strip() for v in payout_param.split(',')]
-            payout_filter = Q()
+        # Handle payment_option filter parameter (comma-separated values: cash,partnership)
+        payment_option_param = request.query_params.get('payment_option', '').lower()
+        if payment_option_param:
+            payment_option_values = [v.strip() for v in payment_option_param.split(',')]
+            payment_option_filter = Q()
             
-            if 'cash' in payout_values:
-                payout_filter |= Q(payout='cash')
-            if 'partnership' in payout_values:
-                payout_filter |= Q(payout='partnership')
+            if 'cash' in payment_option_values:
+                payment_option_filter |= Q(payment_option='cash')
+            if 'partnership' in payment_option_values:
+                payment_option_filter |= Q(payment_option='partnership')
                 
-            if payout_filter:
-                queryset = queryset.filter(payout_filter)
+            if payment_option_filter:
+                queryset = queryset.filter(payment_option_filter)
             
         page = self.paginate_queryset(queryset)
         if page is not None:

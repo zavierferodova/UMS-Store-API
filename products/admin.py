@@ -61,7 +61,7 @@ class ProductImageAdmin(admin.ModelAdmin):
 
 @admin.register(ProductSKU)
 class ProductSKUAdmin(admin.ModelAdmin):
-    list_display = ('product_link', 'sku', 'stock')
+    list_display = ('product_link', 'sku', 'stock', 'payment_option', 'partnership_discount')
     list_display_links = ('product_link',)
     ordering = ('product__name', 'sku')
     search_fields = ('sku', 'product__name')

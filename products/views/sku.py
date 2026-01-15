@@ -11,7 +11,7 @@ from api.mixins import CustomPaginationMixin
 from api.pagination import CustomPagination
 from api.utils import api_response
 from products.models.sku import ProductSKU
-from products.serializers.sku import ProductSKUCreateSerializer, ProductSKUListSerializer, ProductSKUSerializer
+from products.serializers.sku import ProductSKUListSerializer, ProductSKUSerializer
 
 
 class ProductSKUViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
@@ -25,8 +25,6 @@ class ProductSKUViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'list':
             return ProductSKUListSerializer
-        elif self.action == 'create':
-            return ProductSKUCreateSerializer
         return ProductSKUSerializer
 
     def list(self, request, *args, **kwargs):
@@ -51,6 +49,7 @@ class ProductSKUViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         supplier_id = request.query_params.get('supplier_id')
         if supplier_id:
             queryset = queryset.filter(supplier_id=supplier_id)
+
         # Apply category filter if categories parameter is provided
         categories_param = request.query_params.get('categories')
         if categories_param:
@@ -65,6 +64,13 @@ class ProductSKUViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                     queryset = queryset.filter(product__category_id__in=category_uuids)
             except (ValueError, AttributeError):
                 pass
+        
+        # Apply payment_option filter if payment_options parameter is provided
+        payment_options_param = request.query_params.get('payment_options')
+        if payment_options_param:
+            payment_options = [option.strip() for option in payment_options_param.split(',') if option.strip()]
+            if payment_options:
+                queryset = queryset.filter(payment_option__in=payment_options)
         
         page = self.paginate_queryset(queryset)
         if page is not None:
