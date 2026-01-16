@@ -576,7 +576,6 @@ class TransactionViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         # Styles
         title_font = Font(bold=True, size=14)
         subtitle_font = Font(bold=True, size=12)
-        header_font = Font(bold=True)
         bold_font = Font(bold=True)
         center_alignment = Alignment(horizontal='center')
         border = Border(left=Side(style='thin'),
