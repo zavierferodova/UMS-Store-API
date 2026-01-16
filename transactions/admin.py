@@ -23,7 +23,7 @@ class TransactionAdmin(admin.ModelAdmin):
 
 @admin.register(TransactionItem)
 class TransactionItemAdmin(admin.ModelAdmin):
-    list_display = ('transaction', 'product_sku', 'amount', 'unit_price')
+    list_display = ('transaction', 'product_sku', 'amount', 'unit_price', 'supplier_discount')
     search_fields = ('transaction__code', 'product_sku__sku')
 
 @admin.register(TransactionCoupon)

@@ -24,7 +24,7 @@ class ProductSKU(models.Model):
         blank=True,
         null=True,
     )
-    partnership_discount = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    supplier_discount = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -12,7 +12,7 @@ class TransactionItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TransactionItem
-        fields = ['product_sku', 'name', 'sku_code', 'unit_price', 'amount']
+        fields = ['product_sku', 'name', 'sku_code', 'unit_price', 'amount', 'supplier_discount']
         read_only_fields = ['unit_price']
 
     def validate_product_sku(self, value):

@@ -92,6 +92,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
                     product.save()
 
                 product_sku.stock += item.amounts
+                product_sku.supplier_discount = item.supplier_discount
                 product_sku.save()
 
         return purchase_order

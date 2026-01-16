@@ -21,7 +21,7 @@ class ProductSKUSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductSKU
-        fields = ['id', 'sku', 'stock', 'supplier', 'supplier_id', 'product_id', 'payment_option', 'partnership_discount']
+        fields = ['id', 'sku', 'stock', 'supplier', 'supplier_id', 'product_id', 'payment_option', 'supplier_discount']
         read_only_fields = ['id']
 
     def to_representation(self, instance):

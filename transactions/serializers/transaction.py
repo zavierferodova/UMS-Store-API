@@ -175,8 +175,13 @@ class TransactionSerializer(serializers.ModelSerializer):
 
             # Create transaction items
             for item in items_to_create:
+                supplier_discount = None
+                if transaction_instance.paid_time:
+                    supplier_discount = item['product_sku'].supplier_discount
+
                 TransactionItem.objects.create(
                     transaction=transaction_instance,
+                    supplier_discount=supplier_discount,
                     **item
                 )
                 
@@ -250,15 +255,22 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
                         
                         old_item.amount = amount
                         old_item.unit_price = old_item.product_sku.product.price
+                        if is_paid_now:
+                            old_item.supplier_discount = old_item.product_sku.supplier_discount
                         old_item.save()
                     else:
                         # Add new item
                         product_sku_instance = ProductSKU.objects.select_related('product').get(sku=sku_code)
+                        supplier_discount = None
+                        if is_paid_now:
+                            supplier_discount = product_sku_instance.supplier_discount
+
                         TransactionItem.objects.create(
                             transaction=instance,
                             product_sku=product_sku_instance,
                             unit_price=product_sku_instance.product.price,
-                            amount=amount
+                            amount=amount,
+                            supplier_discount=supplier_discount
                         )
                         if is_paid_now:
                             product_sku_instance.stock -= amount
@@ -268,6 +280,8 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
                 for item in instance.items.select_related('product_sku').all():
                     item.product_sku.stock -= item.amount
                     item.product_sku.save()
+                    item.supplier_discount = item.product_sku.supplier_discount
+                    item.save()
             
             if coupons_data is not None:
                 old_coupons = {c.coupon_code.code: c for c in instance.coupons.select_related('coupon_code').all()}
@@ -357,6 +371,8 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
                     instance.save()
                     # Reduce stock since it's now paid
                     for item in instance.items.all():
+                        item.supplier_discount = item.product_sku.supplier_discount
+                        item.save()
                         item.product_sku.stock -= item.amount
                         item.product_sku.save()
                      

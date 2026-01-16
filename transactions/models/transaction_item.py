@@ -12,7 +12,7 @@ class TransactionItem(models.Model):
     product_sku = models.ForeignKey(ProductSKU, on_delete=models.PROTECT, related_name='transaction_items')
     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='items')
     unit_price = models.BigIntegerField()
-    partnership_discount = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    supplier_discount = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
     amount = models.IntegerField()
 
     class Meta:
