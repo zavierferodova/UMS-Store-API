@@ -1,5 +1,5 @@
 import openpyxl
-from django.db.models import F, Q, Sum, Value
+from django.db.models import BigIntegerField, Case, F, Q, Sum, Value, When
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.utils import timezone
@@ -13,6 +13,7 @@ from authentication.permissions import IsAdmin, IsCashier
 from store.models import Store
 from suppliers.models.supplier import Supplier
 from transactions.models.transaction import Transaction
+from transactions.models.transaction_coupon import TransactionCoupon
 from transactions.models.transaction_item import TransactionItem
 from transactions.serializers.transaction import TransactionSerializer, TransactionUpdateSerializer
 from transactions.serializers.transaction_item import SupplierTransactionItemSerializer
@@ -242,7 +243,7 @@ class TransactionViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         
         # Styles
         title_font = Font(bold=True, size=14)
-        subtitle_font = Font(bold=True, size=12) # For UMS Store
+        subtitle_font = Font(bold=True, size=12)
         header_font = Font(bold=True)
         bold_font = Font(bold=True)
         center_alignment = Alignment(horizontal='center')
@@ -444,9 +445,9 @@ class TransactionViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                         bottom=Side(style='thin'))
 
         store = Store.objects.first()
-        store_name = store.name if store else "UMS Store"
-        store_address = store.address if store else "Sukoharjo"
-        store_phone = f"Telp. {store.phone}" if store else "Telp. -"
+        store_name = store.name
+        store_address = store.address
+        store_phone = f"Telp. {store.phone}"
 
         # Title
         ws.merge_cells('A1:E1')
@@ -584,9 +585,9 @@ class TransactionViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
                         bottom=Side(style='thin'))
                         
         store = Store.objects.first()
-        store_name = store.name if store else "UMS Store"
-        store_address = store.address if store else "-"
-        store_phone = f"Telp. {store.phone}" if store else "-"
+        store_name = store.name
+        store_address = store.address
+        store_phone = f"Telp. {store.phone}"
 
         # Title Section
         ws.merge_cells('A1:D1')
@@ -674,11 +675,173 @@ class TransactionViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         sales_cell.border = border
         sales_cell.number_format = '"Rp" #,##0'
 
+        wb.save(response)
+        return response
+
+    def export_coupons(self, request):
+        start_date = request.data.get('start_date')
+        end_date = request.data.get('end_date')
+        types = request.data.get('types')
+
+        queryset = TransactionCoupon.objects.filter(transaction__paid_time__isnull=False)
+
+        if start_date:
+            queryset = queryset.filter(transaction__paid_time__date__gte=start_date)
+        if end_date:
+            queryset = queryset.filter(transaction__paid_time__date__lte=end_date)
+        
+        if types:
+            type_list = [t.strip().lower() for t in types.split(',')]
+            queryset = queryset.filter(coupon_code__coupon__type__in=type_list)
+        
+        aggregated_data = queryset.values(
+            coupon_name=F('coupon_code__coupon__name'),
+            code=F('coupon_code__code'),
+            type=F('coupon_code__coupon__type')
+        ).annotate(
+            usages=Sum('amount'),
+            total_value=Sum(
+                Case(
+                    When(coupon_code__coupon__type='discount', then=F('amount') * Coalesce(F('item_discount_value'), 0)),
+                    When(coupon_code__coupon__type='voucher', then=F('amount') * Coalesce(F('item_voucher_value'), 0)),
+                    default=0,
+                    output_field=BigIntegerField()
+                )
+            )
+        ).order_by('coupon_name')
+        
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = f'attachment; filename="Coupons_Usage_Report_{timezone.now().strftime("%Y%m%d%H%M%S")}.xlsx"'
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Coupons Report"
+
+        # Styles
+        title_font = Font(name='Calibri', size=14, bold=True)
+        subtitle_font = Font(name='Calibri', size=12, bold=True)
+        bold_font = Font(name='Calibri', bold=True)
+        center_alignment = Alignment(horizontal='center', vertical='center')
+        border = Border(left=Side(style='thin'),
+                        right=Side(style='thin'),
+                        top=Side(style='thin'),
+                        bottom=Side(style='thin'))
+
+        store = Store.objects.first()
+        store_name = store.name if store else "UMS Store"
+        store_address = store.address if store else ""
+        store_phone = f"Telp. {store.phone}" if store and store.phone else ""
+
+        # Title
+        ws.merge_cells('A1:F1')
+        ws['A1'] = "SALES REPORT"
+        ws['A1'].font = title_font
+        ws['A1'].alignment = center_alignment
+
+        ws.merge_cells('A2:F2')
+        ws['A2'] = store_name
+        ws['A2'].font = subtitle_font
+        ws['A2'].alignment = center_alignment
+
+        ws.merge_cells('A3:F3')
+        ws['A3'] = store_address
+        ws['A3'].alignment = center_alignment
+
+        ws.merge_cells('A4:F4')
+        ws['A4'] = store_phone
+        ws['A4'].alignment = center_alignment
+
+        # Dates
+        ws['A6'] = "Start Date :"
+        ws['A6'].font = bold_font
+        ws['B6'] = start_date if start_date else "-"
+
+        ws['A7'] = "End Date :"
+        ws['A7'].font = bold_font
+        ws['B7'] = end_date if end_date else "-"
+
+        # Headers
+        headers = ['No', 'Coupon Name', 'Code', 'Type', 'Usages', 'Total Value']
+        header_row = 9
+        for col_num, header_title in enumerate(headers, 1):
+            cell = ws.cell(row=header_row, column=col_num, value=header_title)
+            cell.font = bold_font
+            cell.border = border
+            cell.alignment = center_alignment
+        
+        # Data
+        row_num = 10
+        total_usages = 0
+        total_value_sum = 0
+        
+        for idx, item in enumerate(aggregated_data, 1):
+            usages = item['usages'] or 0
+            val = item['total_value'] or 0
+            
+            total_usages += usages
+            total_value_sum += val
+            
+            # No
+            c = ws.cell(row=row_num, column=1, value=idx)
+            c.border = border
+            c.alignment = center_alignment
+            
+            # Name
+            c = ws.cell(row=row_num, column=2, value=item['coupon_name'])
+            c.border = border
+            
+            # Code
+            c = ws.cell(row=row_num, column=3, value=item['code'])
+            c.border = border
+            c.alignment = center_alignment
+            
+            # Type
+            c = ws.cell(row=row_num, column=4, value=item['type'].title())
+            c.border = border
+            c.alignment = center_alignment
+            
+            # Usages
+            c = ws.cell(row=row_num, column=5, value=usages)
+            c.border = border
+            c.alignment = center_alignment
+            
+            # Total Value
+            c = ws.cell(row=row_num, column=6, value=val)
+            c.border = border
+            c.alignment = center_alignment
+            c.number_format = '"Rp" #,##0'
+            
+            row_num += 1
+            
+        # Footer Total
+        ws.merge_cells(f'A{row_num}:D{row_num}')
+        total_cell = ws.cell(row=row_num, column=1, value="Total")
+        total_cell.font = bold_font
+        total_cell.alignment = center_alignment
+        
+        for col in range(1, 5):
+            ws.cell(row=row_num, column=col).border = border
+            
+        c = ws.cell(row=row_num, column=5, value=total_usages)
+        c.font = bold_font
+        c.alignment = center_alignment
+        c.border = border
+        
+        c = ws.cell(row=row_num, column=6, value=total_value_sum)
+        c.font = bold_font
+        c.alignment = center_alignment
+        c.border = border
+        c.number_format = '"Rp" #,##0'
+        
         # Widths
         ws.column_dimensions['A'].width = 5
-        ws.column_dimensions['B'].width = 30
-        ws.column_dimensions['C'].width = 15
-        ws.column_dimensions['D'].width = 20
-
+        ws.column_dimensions['B'].width = 25
+        ws.column_dimensions['C'].width = 20
+        ws.column_dimensions['D'].width = 15
+        ws.column_dimensions['E'].width = 15
+        ws.column_dimensions['F'].width = 20
+        
         wb.save(response)
         return response
